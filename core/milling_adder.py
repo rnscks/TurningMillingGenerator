@@ -1,33 +1,48 @@
 """
 터닝 형상에 밀링 특징형상 추가 모듈
 
+피처 타입:
+- BLIND_HOLE: 블라인드 홀 (막힌 홀)
+- THROUGH_HOLE: 관통 홀
+- RECTANGULAR_POCKET: 사각 포켓 (블라인드)
+- RECTANGULAR_PASSAGE: 사각 통로 (관통)
+
 핵심 로직:
 1. FaceAnalyzer의 폭/너비 계산 결과 사용
-2. 홀 반경 R ≤ min(W, H) / 2 - clearance 조건으로 유효 면 판단
-3. 유효 UV 범위 계산 및 홀 배치
-
-면 타입별 폭/너비 정의:
-- Cylinder: width=2R(직경), height=Δz(축방향)
-- Cone: width=Δr, height=Δz
-- Torus: width=Δr, height=Δz
-- Ring: width=thickness(r_out-r_in), height=N/A (둘레 기반)
-- Disk: width=height=직경
+2. 피처 스케일 ≤ min(W, H) - 2 * clearance 조건으로 유효 면 판단
+3. 실린더 측면만 유효 면으로 인식 (상/하 평면은 제외)
+4. 유효 범위 계산 및 피처 배치
 """
 
 import math
 import random
+from enum import Enum
 from typing import List, Tuple, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from OCC.Core.TopoDS import TopoDS_Face, TopoDS_Shape
 from OCC.Core.BRepAdaptor import BRepAdaptor_Surface
-from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Ax2
+from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Ax2, gp_Vec
 from OCC.Core.GeomAbs import GeomAbs_Cylinder, GeomAbs_Cone
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeCylinder
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeBox
 from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Cut
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
+from OCC.Core.gp import gp_Trsf
 from OCC.Extend.TopologyUtils import TopologyExplorer
 
 from core.face_analyzer import FaceAnalyzer, FaceDimensionResult
+
+
+# ============================================================================
+# Enums and Constants
+# ============================================================================
+
+class FeatureType(Enum):
+    """밀링 피처 타입"""
+    BLIND_HOLE = "blind_hole"           # 블라인드 홀
+    THROUGH_HOLE = "through_hole"       # 관통 홀
+    RECTANGULAR_POCKET = "rect_pocket"  # 사각 포켓 (블라인드)
+    RECTANGULAR_PASSAGE = "rect_passage"  # 사각 통로 (관통)
 
 
 # ============================================================================
@@ -35,14 +50,28 @@ from core.face_analyzer import FaceAnalyzer, FaceDimensionResult
 # ============================================================================
 
 @dataclass
-class HoleParams:
-    """홀 특징형상 파라미터"""
-    diameter_min: float = 0.5           # 최소 직경 (mm)
-    diameter_max_ratio: float = 0.6     # 유효 치수 대비 최대 직경 비율
+class FeatureParams:
+    """밀링 피처 파라미터 (공통)"""
+    # 스케일 제약
+    diameter_min: float = 0.5           # 최소 직경/폭 (mm)
+    diameter_max_ratio: float = 0.6     # 유효 치수 대비 최대 스케일 비율
     clearance: float = 0.3              # 경계로부터의 최소 여유 거리 (mm)
-    depth_ratio: float = 1.5            # 홀 깊이 = 직경 * depth_ratio
-    min_spacing: float = 1.5            # 홀 간 최소 간격 (mm)
-    max_holes_per_face: int = 3         # 면당 최대 홀 수
+    
+    # 깊이 설정
+    depth_ratio: float = 1.5            # 깊이 = 직경 * depth_ratio (블라인드)
+    through_extra: float = 2.0          # 관통 시 추가 깊이 (형상 두께 + extra)
+    
+    # 배치 설정
+    min_spacing: float = 1.5            # 피처 간 최소 간격 (mm)
+    max_features_per_face: int = 3      # 면당 최대 피처 수
+    
+    # 사각 피처 전용
+    rect_aspect_min: float = 0.5        # 사각 피처 최소 종횡비 (width/length)
+    rect_aspect_max: float = 2.0        # 사각 피처 최대 종횡비
+
+
+# 하위 호환성을 위한 별칭
+HoleParams = FeatureParams
 
 
 @dataclass
@@ -52,14 +81,14 @@ class ValidFaceInfo:
     face: TopoDS_Face
     dimension: FaceDimensionResult
     
-    # 홀 스케일 범위
+    # 피처 스케일 범위
     hole_d_min: float = 0.0
     hole_d_max: float = 0.0
     
     # 유효성
     is_valid: bool = False
     
-    # 홀 배치용 정보
+    # 배치용 정보
     r_outer: float = 0.0
     r_inner: float = 0.0
     z_position: float = 0.0
@@ -67,33 +96,43 @@ class ValidFaceInfo:
 
 
 @dataclass
-class HolePlacement:
-    """홀 배치 정보"""
-    center_3d: gp_Pnt           # 3D 중심점
-    direction: gp_Dir           # 홀 방향 (관통 방향)
-    diameter: float             # 홀 직경
-    depth: float                # 홀 깊이
-    face_id: int                # 배치된 면 ID
-    face_type: str              # 면 타입
+class FeaturePlacement:
+    """피처 배치 정보"""
+    feature_type: FeatureType           # 피처 타입
+    center_3d: gp_Pnt                   # 3D 중심점
+    direction: gp_Dir                   # 피처 방향 (관통 방향)
+    
+    # 홀 전용
+    diameter: float = 0.0               # 홀 직경
+    
+    # 사각 피처 전용
+    width: float = 0.0                  # 사각 폭 (원주 방향)
+    length: float = 0.0                 # 사각 길이 (축 방향)
+    
+    # 공통
+    depth: float = 0.0                  # 피처 깊이
+    face_id: int = 0                    # 배치된 면 ID
+    face_type: str = ""                 # 면 타입
+    is_through: bool = False            # 관통 여부
+
+
+# 하위 호환성을 위한 별칭
+HolePlacement = FeaturePlacement
 
 
 # ============================================================================
-# Hole Scale Calculation
+# Feature Scale Calculation
 # ============================================================================
 
 def compute_hole_scale_range(
     dim: FaceDimensionResult, 
-    params: HoleParams
+    params: FeatureParams
 ) -> Tuple[float, float]:
     """
-    면의 폭/너비를 기반으로 가능한 홀 직경 범위 계산.
-    
-    핵심 조건: 
-    - 홀 배치 가능 영역 = min(W, H) - 2 * clearance
-    - 최대 홀 직경 D_max = ratio * 배치_가능_영역
+    면의 폭/너비를 기반으로 가능한 피처 스케일 범위 계산.
     
     Returns:
-        (D_min, D_max): 가능한 홀 직경 범위
+        (D_min, D_max): 가능한 직경/폭 범위
     """
     W = dim.width if dim.width is not None else 0.0
     H = dim.height if dim.height is not None else W
@@ -108,17 +147,6 @@ def compute_hole_scale_range(
         return 0.0, 0.0
     
     D_max = params.diameter_max_ratio * effective_dim
-    
-    # Ring의 경우 추가 제약
-    if dim.is_ring:
-        ring_thickness = dim.ring_thickness
-        effective_ring = ring_thickness - 2 * params.clearance
-        if effective_ring > 0:
-            D_max_ring = params.diameter_max_ratio * effective_ring
-            D_max = min(D_max, D_max_ring)
-        else:
-            D_max = 0.0
-    
     D_min = params.diameter_min
     D_max = max(0.0, D_max)
     
@@ -126,63 +154,22 @@ def compute_hole_scale_range(
 
 
 # ============================================================================
-# Hole Center Calculation by Face Type
+# Feature Center/Direction Calculation by Face Type
 # ============================================================================
 
-def _compute_hole_center_plane_ring(
+def _compute_feature_center_cylinder(
     info: ValidFaceInfo,
-    diameter: float,
-    params: HoleParams
-) -> Optional[gp_Pnt]:
-    """Ring 평면에서 유효한 홀 중심점 계산."""
-    margin = diameter / 2 + params.clearance
+    feature_size: float,
+    params: FeatureParams
+) -> Optional[Tuple[gp_Pnt, gp_Dir, float]]:
+    """
+    원통면에서 유효한 피처 중심점, 방향, 가용 깊이 계산.
     
-    r_valid_min = info.r_inner + margin
-    r_valid_max = info.r_outer - margin
-    
-    if r_valid_min >= r_valid_max:
-        return None
-    
-    r = random.uniform(r_valid_min, r_valid_max)
-    theta = random.uniform(0, 2 * math.pi)
-    
-    x = r * math.cos(theta)
-    y = r * math.sin(theta)
-    z = info.z_position
-    
-    return gp_Pnt(x, y, z)
-
-
-def _compute_hole_center_plane_disk(
-    info: ValidFaceInfo,
-    diameter: float,
-    params: HoleParams
-) -> Optional[gp_Pnt]:
-    """Disk 평면에서 유효한 홀 중심점 계산."""
-    margin = diameter / 2 + params.clearance
-    r_valid_max = info.r_outer - margin
-    
-    if r_valid_max <= 0:
-        return None
-    
-    r = random.uniform(0, r_valid_max)
-    theta = random.uniform(0, 2 * math.pi)
-    
-    x = r * math.cos(theta)
-    y = r * math.sin(theta)
-    z = info.z_position
-    
-    return gp_Pnt(x, y, z)
-
-
-def _compute_hole_center_cylinder(
-    info: ValidFaceInfo,
-    diameter: float,
-    params: HoleParams
-) -> Optional[Tuple[gp_Pnt, gp_Dir]]:
-    """원통면에서 유효한 홀 중심점과 방향 계산."""
+    Returns:
+        (center, direction, available_depth) 또는 None
+    """
     dim = info.dimension
-    margin = diameter / 2 + params.clearance
+    margin = feature_size / 2 + params.clearance
     
     z_valid_min = dim.z_min + margin
     z_valid_max = dim.z_max - margin
@@ -198,19 +185,23 @@ def _compute_hole_center_cylinder(
     y = radius * math.sin(theta)
     
     center = gp_Pnt(x, y, z)
+    # 방향: 중심을 향해 (바깥에서 안으로)
     direction = gp_Dir(-math.cos(theta), -math.sin(theta), 0)
     
-    return center, direction
+    # 가용 깊이: 실린더 반경 (중심까지)
+    available_depth = radius
+    
+    return center, direction, available_depth
 
 
-def _compute_hole_center_cone(
+def _compute_feature_center_cone(
     info: ValidFaceInfo,
-    diameter: float,
-    params: HoleParams
-) -> Optional[Tuple[gp_Pnt, gp_Dir]]:
-    """원추면 (챔퍼)에서 유효한 홀 중심점과 방향 계산."""
+    feature_size: float,
+    params: FeatureParams
+) -> Optional[Tuple[gp_Pnt, gp_Dir, float]]:
+    """원추면 (챔퍼)에서 유효한 피처 중심점, 방향, 가용 깊이 계산."""
     dim = info.dimension
-    margin = diameter / 2 + params.clearance
+    margin = feature_size / 2 + params.clearance
     
     z_valid_min = dim.z_min + margin
     z_valid_max = dim.z_max - margin
@@ -230,17 +221,23 @@ def _compute_hole_center_cone(
     
     center = gp_Pnt(x, y, z)
     direction = gp_Dir(-math.cos(theta), -math.sin(theta), 0)
+    available_depth = r
     
-    return center, direction
+    return center, direction, available_depth
 
 
 # ============================================================================
-# Hole Creation
+# Feature Creation Functions
 # ============================================================================
 
-def create_hole(shape: TopoDS_Shape, center: gp_Pnt, direction: gp_Dir,
-                diameter: float, depth: float) -> Optional[TopoDS_Shape]:
-    """형상에 홀 추가 (Boolean Cut)."""
+def create_blind_hole(
+    shape: TopoDS_Shape, 
+    center: gp_Pnt, 
+    direction: gp_Dir,
+    diameter: float, 
+    depth: float
+) -> Optional[TopoDS_Shape]:
+    """블라인드 홀 생성 (Boolean Cut)."""
     try:
         radius = diameter / 2
         axis = gp_Ax2(center, direction)
@@ -254,9 +251,132 @@ def create_hole(shape: TopoDS_Shape, center: gp_Pnt, direction: gp_Dir,
             if result and not result.IsNull():
                 return result
     except Exception as e:
-        print(f"    홀 생성 실패: {e}")
+        print(f"    블라인드 홀 생성 실패: {e}")
     
     return None
+
+
+def create_through_hole(
+    shape: TopoDS_Shape, 
+    center: gp_Pnt, 
+    direction: gp_Dir,
+    diameter: float, 
+    available_depth: float,
+    extra: float = 2.0
+) -> Optional[TopoDS_Shape]:
+    """관통 홀 생성 (Boolean Cut)."""
+    try:
+        radius = diameter / 2
+        # 관통을 위해 충분히 긴 깊이
+        through_depth = available_depth + extra
+        
+        axis = gp_Ax2(center, direction)
+        hole_cyl = BRepPrimAPI_MakeCylinder(axis, radius, through_depth).Shape()
+        
+        cut_op = BRepAlgoAPI_Cut(shape, hole_cyl)
+        cut_op.Build()
+        
+        if cut_op.IsDone():
+            result = cut_op.Shape()
+            if result and not result.IsNull():
+                return result
+    except Exception as e:
+        print(f"    관통 홀 생성 실패: {e}")
+    
+    return None
+
+
+def create_rectangular_pocket(
+    shape: TopoDS_Shape,
+    center: gp_Pnt,
+    direction: gp_Dir,
+    width: float,
+    length: float,
+    depth: float,
+    theta: float = 0.0  # 원통 면에서의 각도 (라디안)
+) -> Optional[TopoDS_Shape]:
+    """
+    사각 포켓 (블라인드) 생성.
+    
+    원통면에서:
+    - width: 원주 방향 (theta 방향)
+    - length: 축 방향 (Z 방향)
+    """
+    try:
+        # 로컬 좌표계에서 박스 생성
+        # 박스 원점을 중심에 맞추기 위해 오프셋
+        half_w = width / 2
+        half_l = length / 2
+        
+        # 방향 벡터
+        dir_vec = gp_Vec(direction)
+        
+        # 방향에 수직인 두 벡터 (로컬 X, Y)
+        # Z축을 기준으로 계산
+        if abs(direction.Z()) > 0.9:
+            # 방향이 거의 Z 축일 경우
+            local_x = gp_Dir(1, 0, 0)
+        else:
+            z_axis = gp_Dir(0, 0, 1)
+            local_x_vec = gp_Vec(direction).Crossed(gp_Vec(z_axis))
+            local_x = gp_Dir(local_x_vec)
+        
+        local_y_vec = gp_Vec(direction).Crossed(gp_Vec(local_x))
+        local_y = gp_Dir(local_y_vec)
+        
+        # 박스 시작점 계산 (중심에서 -half_w, -half_l 오프셋)
+        start_pt = gp_Pnt(
+            center.X() - half_w * local_x.X() - half_l * local_y.X(),
+            center.Y() - half_w * local_x.Y() - half_l * local_y.Y(),
+            center.Z() - half_w * local_x.Z() - half_l * local_y.Z()
+        )
+        
+        # 박스 생성
+        box_maker = BRepPrimAPI_MakeBox(
+            gp_Ax2(start_pt, direction, local_x),
+            width, length, depth
+        )
+        pocket_box = box_maker.Shape()
+        
+        cut_op = BRepAlgoAPI_Cut(shape, pocket_box)
+        cut_op.Build()
+        
+        if cut_op.IsDone():
+            result = cut_op.Shape()
+            if result and not result.IsNull():
+                return result
+    except Exception as e:
+        print(f"    사각 포켓 생성 실패: {e}")
+    
+    return None
+
+
+def create_rectangular_passage(
+    shape: TopoDS_Shape,
+    center: gp_Pnt,
+    direction: gp_Dir,
+    width: float,
+    length: float,
+    available_depth: float,
+    extra: float = 2.0,
+    theta: float = 0.0
+) -> Optional[TopoDS_Shape]:
+    """사각 통로 (관통) 생성."""
+    through_depth = available_depth + extra
+    return create_rectangular_pocket(
+        shape, center, direction, 
+        width, length, through_depth, theta
+    )
+
+
+# ============================================================================
+# Legacy Function (하위 호환성)
+# ============================================================================
+
+def create_hole(shape: TopoDS_Shape, center: gp_Pnt, direction: gp_Dir,
+                diameter: float, depth: float) -> Optional[TopoDS_Shape]:
+    """형상에 홀 추가 (Boolean Cut) - 하위 호환성용."""
+    return create_blind_hole(shape, center, direction, diameter, depth)
 
 
 # ============================================================================
@@ -268,17 +388,17 @@ class MillingFeatureAdder:
     터닝 형상에 밀링 특징형상을 추가하는 클래스.
     
     사용법:
-        adder = MillingFeatureAdder(HoleParams())
+        adder = MillingFeatureAdder(FeatureParams())
         new_shape, placements = adder.add_milling_features(
             shape, 
-            target_face_types=["Plane", "Cylinder"],
-            max_total_holes=5
+            target_face_types=["Cylinder"],  # 실린더 측면만
+            max_total_features=5
         )
     """
     
-    def __init__(self, params: HoleParams = None):
-        self.params = params or HoleParams()
-        self.placements: List[HolePlacement] = []
+    def __init__(self, params: FeatureParams = None):
+        self.params = params or FeatureParams()
+        self.placements: List[FeaturePlacement] = []
         self.face_infos: List[ValidFaceInfo] = []
         self.analyzer = FaceAnalyzer()
         
@@ -289,7 +409,7 @@ class MillingFeatureAdder:
         dim: FaceDimensionResult
     ) -> ValidFaceInfo:
         """면을 분석하여 밀링 가능 여부 판단."""
-        # 홀 스케일 범위 계산
+        # 스케일 범위 계산
         d_min, d_max = compute_hole_scale_range(dim, self.params)
         
         # 유효성 판단
@@ -334,9 +454,14 @@ class MillingFeatureAdder:
         return self.face_infos
     
     def get_valid_faces(self, target_types: List[str] = None) -> List[ValidFaceInfo]:
-        """유효한 면만 필터링하여 반환."""
+        """
+        유효한 면만 필터링하여 반환.
+        
+        기본: Cylinder, Cone만 (Plane 제외 - 상/하 뚜껑면 제외)
+        """
         if target_types is None:
-            target_types = ["Plane (Ring)", "Plane (Disk)", "Cylinder", "Cone"]
+            # 기본: 실린더 측면만 (Plane 제외)
+            target_types = ["Cylinder", "Cone"]
         
         valid = []
         for info in self.face_infos:
@@ -344,107 +469,191 @@ class MillingFeatureAdder:
                 continue
             
             face_type = info.dimension.surface_type
+            
+            # Plane (Ring/Disk)은 제외 (상/하 뚜껑면)
+            if "Plane" in face_type:
+                continue
+            
             if any(t in face_type for t in target_types):
                 valid.append(info)
         
         return valid
     
+    def add_feature_to_face(
+        self,
+        shape: TopoDS_Shape,
+        info: ValidFaceInfo,
+        feature_type: FeatureType = None
+    ) -> Tuple[TopoDS_Shape, Optional[FeaturePlacement]]:
+        """
+        단일 면에 밀링 피처 추가.
+        
+        Args:
+            shape: 원본 형상
+            info: 면 정보
+            feature_type: 피처 타입 (None이면 랜덤 선택)
+        """
+        # 피처 타입 결정
+        if feature_type is None:
+            feature_type = random.choice(list(FeatureType))
+        
+        # 스케일 결정
+        diameter = random.uniform(info.hole_d_min, info.hole_d_max)
+        
+        # 면 타입에 따른 중심점/방향 계산
+        face_type = info.dimension.surface_type
+        result = None
+        
+        if "Cylinder" in face_type:
+            result = _compute_feature_center_cylinder(info, diameter, self.params)
+        elif "Cone" in face_type:
+            result = _compute_feature_center_cone(info, diameter, self.params)
+        
+        if result is None:
+            return shape, None
+        
+        center, direction, available_depth = result
+        
+        # 기존 피처와의 간격 확인
+        for existing in self.placements:
+            dist = center.Distance(existing.center_3d)
+            existing_size = existing.diameter if existing.diameter > 0 else max(existing.width, existing.length)
+            min_dist = (diameter + existing_size) / 2 + self.params.min_spacing
+            if dist < min_dist:
+                return shape, None
+        
+        # 피처 생성
+        new_shape = None
+        placement = None
+        
+        if feature_type == FeatureType.BLIND_HOLE:
+            depth = diameter * self.params.depth_ratio
+            new_shape = create_blind_hole(shape, center, direction, diameter, depth)
+            if new_shape:
+                placement = FeaturePlacement(
+                    feature_type=feature_type,
+                    center_3d=center,
+                    direction=direction,
+                    diameter=diameter,
+                    depth=depth,
+                    face_id=info.face_id,
+                    face_type=face_type,
+                    is_through=False
+                )
+                
+        elif feature_type == FeatureType.THROUGH_HOLE:
+            new_shape = create_through_hole(
+                shape, center, direction, diameter, 
+                available_depth, self.params.through_extra
+            )
+            if new_shape:
+                placement = FeaturePlacement(
+                    feature_type=feature_type,
+                    center_3d=center,
+                    direction=direction,
+                    diameter=diameter,
+                    depth=available_depth + self.params.through_extra,
+                    face_id=info.face_id,
+                    face_type=face_type,
+                    is_through=True
+                )
+                
+        elif feature_type == FeatureType.RECTANGULAR_POCKET:
+            # 사각 피처 크기 결정
+            aspect = random.uniform(self.params.rect_aspect_min, self.params.rect_aspect_max)
+            width = diameter
+            length = diameter * aspect
+            depth = diameter * self.params.depth_ratio
+            
+            new_shape = create_rectangular_pocket(
+                shape, center, direction, width, length, depth
+            )
+            if new_shape:
+                placement = FeaturePlacement(
+                    feature_type=feature_type,
+                    center_3d=center,
+                    direction=direction,
+                    width=width,
+                    length=length,
+                    depth=depth,
+                    face_id=info.face_id,
+                    face_type=face_type,
+                    is_through=False
+                )
+                
+        elif feature_type == FeatureType.RECTANGULAR_PASSAGE:
+            aspect = random.uniform(self.params.rect_aspect_min, self.params.rect_aspect_max)
+            width = diameter
+            length = diameter * aspect
+            
+            new_shape = create_rectangular_passage(
+                shape, center, direction, width, length,
+                available_depth, self.params.through_extra
+            )
+            if new_shape:
+                placement = FeaturePlacement(
+                    feature_type=feature_type,
+                    center_3d=center,
+                    direction=direction,
+                    width=width,
+                    length=length,
+                    depth=available_depth + self.params.through_extra,
+                    face_id=info.face_id,
+                    face_type=face_type,
+                    is_through=True
+                )
+        
+        if new_shape and placement:
+            return new_shape, placement
+        
+        return shape, None
+    
     def add_hole_to_face(
         self,
         shape: TopoDS_Shape,
         info: ValidFaceInfo,
-    ) -> Tuple[TopoDS_Shape, Optional[HolePlacement]]:
-        """단일 면에 홀 추가."""
-        # 직경 결정
-        diameter = random.uniform(info.hole_d_min, info.hole_d_max)
-        depth = diameter * self.params.depth_ratio
-        
-        # 면 타입에 따른 중심점/방향 계산
-        face_type = info.dimension.surface_type
-        center = None
-        direction = gp_Dir(0, 0, -1)  # 기본: -Z
-        
-        if "Ring" in face_type:
-            center = _compute_hole_center_plane_ring(info, diameter, self.params)
-            if center and info.z_position > 0:
-                direction = gp_Dir(0, 0, -1)
-            else:
-                direction = gp_Dir(0, 0, 1)
-                
-        elif "Disk" in face_type:
-            center = _compute_hole_center_plane_disk(info, diameter, self.params)
-            if center and info.z_position > 0:
-                direction = gp_Dir(0, 0, -1)
-            else:
-                direction = gp_Dir(0, 0, 1)
-                
-        elif "Cylinder" in face_type:
-            result = _compute_hole_center_cylinder(info, diameter, self.params)
-            if result:
-                center, direction = result
-                
-        elif "Cone" in face_type:
-            result = _compute_hole_center_cone(info, diameter, self.params)
-            if result:
-                center, direction = result
-        
-        if center is None:
-            return shape, None
-        
-        # 기존 홀과의 간격 확인
-        for existing in self.placements:
-            dist = center.Distance(existing.center_3d)
-            min_dist = (diameter + existing.diameter) / 2 + self.params.min_spacing
-            if dist < min_dist:
-                return shape, None
-        
-        # 홀 생성
-        new_shape = create_hole(shape, center, direction, diameter, depth)
-        
-        if new_shape:
-            placement = HolePlacement(
-                center_3d=center,
-                direction=direction,
-                diameter=diameter,
-                depth=depth,
-                face_id=info.face_id,
-                face_type=face_type
-            )
-            return new_shape, placement
-        
-        return shape, None
+    ) -> Tuple[TopoDS_Shape, Optional[FeaturePlacement]]:
+        """단일 면에 홀 추가 (하위 호환성 - 랜덤 홀 타입)."""
+        hole_type = random.choice([FeatureType.BLIND_HOLE, FeatureType.THROUGH_HOLE])
+        return self.add_feature_to_face(shape, info, hole_type)
     
     def add_milling_features(
         self,
         shape: TopoDS_Shape,
         target_face_types: List[str] = None,
         max_total_holes: int = 5,
-        holes_per_face: int = 1
-    ) -> Tuple[TopoDS_Shape, List[HolePlacement]]:
+        holes_per_face: int = 1,
+        feature_types: List[FeatureType] = None
+    ) -> Tuple[TopoDS_Shape, List[FeaturePlacement]]:
         """
-        형상에 밀링 특징형상(홀) 추가.
+        형상에 밀링 특징형상 추가.
         
         Args:
             shape: 원본 터닝 형상
-            target_face_types: 대상 면 타입 목록
-            max_total_holes: 총 최대 홀 수
-            holes_per_face: 면당 홀 수
+            target_face_types: 대상 면 타입 목록 (기본: ["Cylinder"])
+            max_total_holes: 총 최대 피처 수
+            holes_per_face: 면당 피처 수
+            feature_types: 사용할 피처 타입 목록 (None이면 모든 타입)
             
         Returns:
             (수정된 형상, 전체 배치 정보)
         """
         if target_face_types is None:
-            target_face_types = ["Plane", "Cylinder"]
+            # 기본: 실린더 측면만 (Plane 제외)
+            target_face_types = ["Cylinder"]
+        
+        if feature_types is None:
+            feature_types = list(FeatureType)
         
         # 면 분석
         self.analyze_faces(shape)
         print(f"  밀링 대상 면: {len(self.face_infos)}개")
         
-        # 유효 면 필터링
+        # 유효 면 필터링 (Plane 제외됨)
         valid_faces = self.get_valid_faces(target_face_types)
         
         if not valid_faces:
-            print("  밀링 가능한 면 없음")
+            print("  밀링 가능한 면 없음 (실린더 측면만 대상)")
             return shape, []
         
         print(f"  필터링된 대상 면: {len(valid_faces)}개")
@@ -468,11 +677,24 @@ class MillingFeatureAdder:
                 if len(self.placements) >= max_total_holes:
                     break
                 
-                current_shape, placement = self.add_hole_to_face(current_shape, info)
+                # 피처 타입 랜덤 선택
+                feature_type = random.choice(feature_types)
+                
+                current_shape, placement = self.add_feature_to_face(
+                    current_shape, info, feature_type
+                )
                 
                 if placement:
                     self.placements.append(placement)
-                    print(f"    홀 추가: Face {info.face_id} ({info.dimension.surface_type}), "
-                          f"D={placement.diameter:.2f}mm, depth={placement.depth:.2f}mm")
+                    
+                    # 로그 출력
+                    if placement.diameter > 0:
+                        size_str = f"D={placement.diameter:.2f}mm"
+                    else:
+                        size_str = f"W={placement.width:.2f}mm, L={placement.length:.2f}mm"
+                    
+                    through_str = "(관통)" if placement.is_through else "(블라인드)"
+                    print(f"    피처 추가: Face {info.face_id}, {placement.feature_type.value} {through_str}, "
+                          f"{size_str}, depth={placement.depth:.2f}mm")
         
         return current_shape, self.placements

@@ -1,15 +1,30 @@
 """
 시각화 모듈
 
-- face_viz: 면 치수 시각화
 - milling_viz: 밀링 프로세스 시각화
+- tree_viz: 트리 구조 시각화
 """
 
-from viz.face_viz import visualize_face_dimensions, visualize_single_face
-from viz.milling_viz import visualize_milling_process
+from viz.milling_viz import (
+    visualize_hole_valid_faces_and_placement,
+    visualize_final_shape_with_holes,
+    visualize_milling_process,
+)
+from viz.tree_viz import (
+    visualize_tree,
+    visualize_trees_grid,
+    visualize_tree_statistics,
+    visualize_trees,
+)
 
 __all__ = [
-    'visualize_face_dimensions', 
-    'visualize_single_face',
+    # 밀링 시각화
+    'visualize_hole_valid_faces_and_placement',
+    'visualize_final_shape_with_holes',
     'visualize_milling_process',
+    # 트리 시각화
+    'visualize_tree',
+    'visualize_trees_grid',
+    'visualize_tree_statistics',
+    'visualize_trees',
 ]
