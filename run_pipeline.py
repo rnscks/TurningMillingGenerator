@@ -24,7 +24,8 @@ from core import TurningParams, HoleParams
 from utils import (
     save_step, load_trees, save_trees,
     classify_trees_by_step_count, get_tree_stats,
-    generate_trees
+    generate_trees,
+    find_bidirectional_step_trees, find_sibling_groove_trees,
 )
 from viz import visualize_milling_process, visualize_trees
 
@@ -196,8 +197,8 @@ def run_generation_pipeline(
 
 def run_full_pipeline(
     json_path: str = None,
-    n_nodes: int = 6,
-    max_depth: int = 3,
+    n_nodes: int = 8,
+    max_depth: int = 4,
     selected_indices: List[int] = None,
     params: TurningMillingParams = None,
     results_dir: str = "results",
@@ -225,21 +226,45 @@ def run_full_pipeline(
     # 1. 트리 로드 또는 생성
     trees = load_or_generate_trees(json_path, n_nodes, max_depth, results_dir)
     
-    # 2. 트리 선택
+    # 2. 트리 선택 (양방향 Step, 형제 Groove 우선 포함)
     if selected_indices is None:
-        # step 개수별로 다양하게 선택
-        step_count_map = classify_trees_by_step_count(trees)
         selected_indices = []
+        selected_set = set()
         
+        # 2-1. 양방향 Step 트리 최소 2개 포함
+        bidirectional_indices = find_bidirectional_step_trees(trees)
+        print(f"\n양방향 Step 트리: {len(bidirectional_indices)}개 발견")
+        for idx in bidirectional_indices[:2]:
+            if idx not in selected_set:
+                selected_indices.append(idx)
+                selected_set.add(idx)
+                stats = get_tree_stats(trees[idx])
+                print(f"  [양방향] #{idx}: {stats['canonical']}")
+        
+        # 2-2. 형제 Groove 트리 최소 2개 포함
+        sibling_groove_indices = find_sibling_groove_trees(trees)
+        print(f"형제 Groove 트리: {len(sibling_groove_indices)}개 발견")
+        for idx in sibling_groove_indices[:2]:
+            if idx not in selected_set:
+                selected_indices.append(idx)
+                selected_set.add(idx)
+                stats = get_tree_stats(trees[idx])
+                print(f"  [형제G] #{idx}: {stats['canonical']}")
+        
+        # 2-3. 나머지는 step 개수별로 다양하게 선택
+        step_count_map = classify_trees_by_step_count(trees)
         for s_count in sorted(step_count_map.keys()):
             indices = step_count_map[s_count]
-            # 각 step 개수별로 최대 2개씩 선택
-            selected_indices.extend(indices[:min(2, len(indices))])
+            for idx in indices:
+                if idx not in selected_set and len(selected_indices) < 10:
+                    selected_indices.append(idx)
+                    selected_set.add(idx)
+                    break
         
         # 최대 10개까지만
         selected_indices = selected_indices[:10]
     
-    print(f"\n선택된 트리: {selected_indices}")
+    print(f"\n선택된 트리 ({len(selected_indices)}개): {selected_indices}")
     
     # 3. 트리 통계 출력
     step_count_map = classify_trees_by_step_count(trees)
@@ -280,15 +305,21 @@ def run_full_pipeline(
 
 def main():
     """메인 실행"""
-    # 파라미터 설정
+    # 파라미터 설정 (Bottom-Up 방식)
     params = TurningMillingParams(
         turning=TurningParams(
-            stock_height_range=(15.0, 20.0),
-            stock_radius_range=(6.5, 8.5),
+            # Stock margin (필요 크기에 추가되는 여유)
+            stock_height_margin=(3.0, 8.0),
+            stock_radius_margin=(2.0, 5.0),
+            # Step 파라미터
             step_depth_range=(0.8, 1.5),
-            step_height_range=(2.5, 6.5),
-            groove_depth_range=(0.5, 1.0),
-            groove_width_range=(2.5, 6.5),
+            step_height_range=(2.0, 4.0),
+            step_margin=0.5,
+            # Groove 파라미터
+            groove_depth_range=(0.4, 0.8),
+            groove_width_range=(1.5, 3.0),
+            groove_margin=0.3,
+            # 챔퍼/라운드
             chamfer_range=(0.3, 0.8),
             fillet_range=(0.3, 0.8),
             edge_feature_prob=0.3,
@@ -314,20 +345,20 @@ def main():
     existing_trees_path = Path("trees_N6_H3.json")
     
     if existing_trees_path.exists():
-        # 기존 파일에서 로드하여 실행 - 다양한 트리 선택
+        # 기존 파일에서 로드하여 실행 - 자동 선택 (양방향 Step, 형제 Groove 우선)
         run_full_pipeline(
             json_path=str(existing_trees_path),
-            selected_indices=[0, 2, 5, 10, 15, 20, 25, 30],  # 다양한 트리 8개
+            selected_indices=None,  # 자동 선택 (양방향 Step, 형제 Groove 우선 포함)
             params=params,
             results_dir="results",
-            seed=12345  # 다른 시드로 다양한 피처 타입
+            seed=12345
         )
     else:
-        # 새로 생성하여 실행
+        # 새로 생성하여 실행 - 자동 선택
         run_full_pipeline(
             n_nodes=6,
-            max_depth=3,
-            selected_indices=[0, 2, 5, 10, 15],  # 5개 트리
+            max_depth=4,
+            selected_indices=None,  # 자동 선택 (양방향 Step, 형제 Groove 우선 포함)
             params=params,
             results_dir="results",
             seed=12345

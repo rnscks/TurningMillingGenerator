@@ -197,10 +197,16 @@ def visualize_trees_grid(
     
     fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
     
-    # axes를 1D 배열로 변환
+    # axes를 1D 배열로 변환 (모든 경우를 처리)
     if n_rows == 1 and n_cols == 1:
+        # 단일 subplot인 경우 axes가 단일 객체로 반환됨
         axes = np.array([axes])
-    axes = np.array(axes).flatten()
+    elif n_rows == 1 or n_cols == 1:
+        # 1행 또는 1열인 경우 axes가 1D 배열로 반환됨
+        axes = np.atleast_1d(axes)
+    else:
+        # 2D 배열인 경우 flatten
+        axes = axes.flatten()
     
     for i, tree in enumerate(trees):
         visualize_tree(tree, ax=axes[i])

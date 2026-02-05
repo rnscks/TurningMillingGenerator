@@ -75,6 +75,9 @@ class FaceDimensionResult:
 
 def sample_edge_points(edge: TopoDS_Edge, n_samples: int = 30) -> List[gp_Pnt]:
     """Edge에서 균등하게 점 샘플링."""
+    # n_samples가 2 미만이면 최소 2개로 설정 (ZeroDivisionError 방지)
+    n_samples = max(2, n_samples)
+    
     adaptor = BRepAdaptor_Curve(edge)
     t_min = adaptor.FirstParameter()
     t_max = adaptor.LastParameter()

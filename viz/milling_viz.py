@@ -69,10 +69,20 @@ def create_feature_mesh(placement: FeaturePlacement) -> Optional[pv.PolyData]:
             local_x = np.array([1, 0, 0])
         else:
             local_x = np.cross(direction, z_axis)
-            local_x = local_x / np.linalg.norm(local_x)
+            norm_x = np.linalg.norm(local_x)
+            # norm이 0에 가까우면 기본값 사용 (ZeroDivisionError 방지)
+            if norm_x < 1e-10:
+                local_x = np.array([1, 0, 0])
+            else:
+                local_x = local_x / norm_x
         
         local_y = np.cross(direction, local_x)
-        local_y = local_y / np.linalg.norm(local_y)
+        norm_y = np.linalg.norm(local_y)
+        # norm이 0에 가까우면 기본값 사용
+        if norm_y < 1e-10:
+            local_y = np.array([0, 1, 0])
+        else:
+            local_y = local_y / norm_y
         
         # 박스 꼭짓점 계산 (중심에서 시작)
         half_w = placement.width / 2

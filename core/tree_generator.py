@@ -7,12 +7,19 @@
 - g (groove): 홈 가공 노드
 - 최대 깊이 H 제약
 - 총 노드 수 N 제약
+
+기하학적 제약 조건:
+- Groove → Step: 불가능 (좁은 홈 안에서 계단 불가)
+- Groove → Groove: 가능 (중첩 홈)
+- Step → Step: 가능하지만 자식으로 Step은 1개만
+- Step → Groove: 가능
+- Base → Step: 2방향으로 최대 2개까지
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Dict, Optional, Set, Tuple
 from itertools import product
-import copy
+import random
 
 
 @dataclass
@@ -22,6 +29,8 @@ class TreeGeneratorParams:
     max_depth: int = 3                  # 최대 깊이 (루트=0 기준)
     labels: List[str] = None           # 사용 가능한 라벨 (b 제외)
     max_children_per_node: int = 4     # 노드당 최대 자식 수
+    max_step_children_from_base: int = 2   # Base에서 Step 자식 최대 수
+    max_step_children_from_step: int = 1   # Step에서 Step 자식 최대 수
     
     def __post_init__(self):
         if self.labels is None:
@@ -44,6 +53,74 @@ class TreeGenerator:
     def __init__(self, params: TreeGeneratorParams = None):
         self.params = params or TreeGeneratorParams()
     
+    def _get_allowed_child_labels(self, parent_label: str) -> List[str]:
+        """
+        부모 라벨에 따라 허용되는 자식 라벨 목록 반환.
+        
+        규칙:
+        - Groove(g)의 자식으로 Step(s)은 불가능 (기하학적 제약)
+        - Base(b), Step(s)의 자식으로는 모든 라벨 가능
+        """
+        if parent_label == 'g':
+            # Groove의 자식은 Groove만 가능
+            return ['g'] if 'g' in self.params.labels else []
+        else:
+            # Base, Step의 자식은 모든 라벨 가능
+            return self.params.labels
+    
+    def _get_max_children_count(
+        self, 
+        parent_label: str, 
+        child_label: str,
+        current_counts: Dict[str, int] = None
+    ) -> int:
+        """
+        부모-자식 라벨 조합에 따른 최대 자식 수 반환.
+        
+        규칙:
+        - Base → Step: 최대 2개
+        - Step → Step: 최대 1개
+        - 그 외: max_children_per_node
+        """
+        if current_counts is None:
+            current_counts = {}
+        
+        if parent_label == 'b' and child_label == 's':
+            return self.params.max_step_children_from_base
+        elif parent_label == 's' and child_label == 's':
+            return self.params.max_step_children_from_step
+        else:
+            return self.params.max_children_per_node
+    
+    def _validate_children_combination(
+        self, 
+        parent_label: str, 
+        children_labels: Tuple[str, ...]
+    ) -> bool:
+        """
+        부모와 자식 라벨 조합이 유효한지 검증.
+        
+        Returns:
+            유효하면 True, 아니면 False
+        """
+        # 허용된 자식 라벨인지 확인
+        allowed = self._get_allowed_child_labels(parent_label)
+        for child_label in children_labels:
+            if child_label not in allowed:
+                return False
+        
+        # 라벨별 개수 제한 확인
+        label_counts = {}
+        for label in children_labels:
+            label_counts[label] = label_counts.get(label, 0) + 1
+        
+        for label, count in label_counts.items():
+            max_count = self._get_max_children_count(parent_label, label)
+            if count > max_count:
+                return False
+        
+        return True
+    
     def generate_all_trees(self) -> List[Dict]:
         """
         모든 유효한 트리 구조 생성.
@@ -57,6 +134,9 @@ class TreeGenerator:
         
         if n < 1:
             return []
+        
+        if h < 1:
+            raise ValueError(f"max_depth must be at least 1, got {h}")
         
         # 루트만 있는 경우
         if n == 1:
@@ -97,6 +177,10 @@ class TreeGenerator:
         """
         트리 구조 열거 (DFS 방식).
         루트 아래에 배치 가능한 모든 서브트리 조합을 탐색.
+        
+        Base(b)에서의 자식 제약:
+        - Step은 최대 2개까지
+        - Groove는 제한 없음 (max_children_per_node까지)
         """
         if remaining_nodes == 0:
             # 노드 수 제약 불만족
@@ -111,6 +195,10 @@ class TreeGenerator:
             for partition in self._partitions(remaining_nodes, n_children):
                 # 각 자식의 라벨 조합
                 for labels_combo in product(self.params.labels, repeat=n_children):
+                    # Base에서의 자식 조합 유효성 검증
+                    if not self._validate_children_combination('b', labels_combo):
+                        continue
+                    
                     # 각 자식 서브트리에 대해 재귀적으로 생성
                     subtrees_options = []
                     valid = True
@@ -160,6 +248,10 @@ class TreeGenerator:
             
         Returns:
             가능한 서브트리 리스트
+            
+        기하학적 제약:
+        - Groove(g)의 자식으로 Step(s) 불가
+        - Step(s)의 자식으로 Step은 최대 1개
         """
         if node_count < 1 or depth_remaining < 0:
             return []
@@ -176,13 +268,24 @@ class TreeGenerator:
             # 더 이상 자식 추가 불가
             return []
         
+        # 허용된 자식 라벨 확인
+        allowed_child_labels = self._get_allowed_child_labels(label)
+        if not allowed_child_labels:
+            # 자식을 가질 수 없는데 node_count > 1이면 불가능
+            return []
+        
         # 자식 서브트리 생성
         subtrees = []
         child_nodes = node_count - 1  # 루트 제외
         
         for n_children in range(1, min(child_nodes + 1, self.params.max_children_per_node + 1)):
             for partition in self._partitions(child_nodes, n_children):
-                for labels_combo in product(self.params.labels, repeat=n_children):
+                # 허용된 라벨로만 조합 생성
+                for labels_combo in product(allowed_child_labels, repeat=n_children):
+                    # 자식 조합 유효성 검증 (개수 제한 등)
+                    if not self._validate_children_combination(label, labels_combo):
+                        continue
+                    
                     child_subtrees_options = []
                     valid = True
                     
@@ -319,7 +422,6 @@ class TreeGenerator:
             return all_trees
         
         if not ensure_diversity:
-            import random
             return random.sample(all_trees, total_count)
         
         # step/groove 비율별로 분류
@@ -336,7 +438,6 @@ class TreeGenerator:
         
         # 각 비율에서 균등하게 샘플링
         result = []
-        import random
         
         ratios = list(by_ratio.keys())
         per_ratio = max(1, total_count // len(ratios))

@@ -1,0 +1,7149 @@
+{
+  "trees": [
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(s(g,s))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(s(g,g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(g(g,g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(g(g),s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(g,s(s))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(g,s(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(g,g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(g,g,s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3,
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(g,g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3,
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g(g,g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g,g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g,g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3,
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g(g)),s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g,g),s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,s(s(s))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,s(s(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,s(g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,s(g,s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,s(g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,g(g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,g(g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g),s(s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g),s(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g),g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,g(g),s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,g,s(s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,g,s(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,g,g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,g,g,s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,g,g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g(g,g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g,g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g,g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3,
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g,g(g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g,g(g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g),g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g,g,g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g,g,g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(s(s(s))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(s(s(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(s(g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(s(g,s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(s(g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(g(g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(g(g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(g(g),s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(g,s(s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(g,s(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(g,g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(g,g,s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s,s(g,g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g(g))),s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 4
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g,g)),s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g,g(g)),s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g,g,g),s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(s(s(s))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(s(s(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(s(g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(s(g,s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(s(g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g(g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g(g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g(g),s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g,s(s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g,s(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g,g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g,g,s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g,g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3,
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g(g(g))))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g(g,g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g,g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g,g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3,
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(s)),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(s(g)),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g)),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,s),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g,g),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g),s(s(s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g),s(s(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g(g)),s(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g),s(g,s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(s(g),s(g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g)),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g,g),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g)),s(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g,g),s(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g),s(s(s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g),s(s(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g),s(g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g),s(g,s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g),s(g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g)),g(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g),g(g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g(g)),s,s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [
+            3
+          ],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g,g),s,s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            4,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2,
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s,s(s(s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s,s(s(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s,s(g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s,s(g,s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s,s(g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g(g)),s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [
+            4
+          ],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 3
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g,g),s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3,
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,s(s(s)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,s(s(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,s(g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,s(g,s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,s(g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,g(g(g)))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [
+            5
+          ],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 3
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,g(g,g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            4,
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g),s,s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g),s,s(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g(g),g(g),s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            3,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            2
+          ],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 1,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(s),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,s(g),s(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g),s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g),s(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g),g(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g(g),s,s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            4,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            3
+          ],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 2,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,s,s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,s,s(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,g(g),s)",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3,
+            5
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            4
+          ],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 3,
+          "children": [],
+          "depth": 2
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,g,s(s))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "s",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,g,s(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "s",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    },
+    {
+      "N": 6,
+      "max_depth_constraint": 4,
+      "canonical": "b(g,g,g,g(g))",
+      "nodes": [
+        {
+          "id": 0,
+          "label": "b",
+          "parent": null,
+          "children": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "depth": 0
+        },
+        {
+          "id": 1,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 2,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 3,
+          "label": "g",
+          "parent": 0,
+          "children": [],
+          "depth": 1
+        },
+        {
+          "id": 4,
+          "label": "g",
+          "parent": 0,
+          "children": [
+            5
+          ],
+          "depth": 1
+        },
+        {
+          "id": 5,
+          "label": "g",
+          "parent": 4,
+          "children": [],
+          "depth": 2
+        }
+      ]
+    }
+  ]
+}

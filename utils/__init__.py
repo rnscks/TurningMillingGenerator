@@ -11,6 +11,7 @@ from utils.tree_io import (
     classify_trees_by_step_count, classify_trees_by_groove_count,
     get_tree_stats, filter_trees,
     generate_trees, generate_and_save_trees,
+    find_bidirectional_step_trees, find_sibling_groove_trees,
 )
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     'classify_trees_by_step_count', 'classify_trees_by_groove_count',
     'get_tree_stats', 'filter_trees',
     'generate_trees', 'generate_and_save_trees',
+    'find_bidirectional_step_trees', 'find_sibling_groove_trees',
 ]

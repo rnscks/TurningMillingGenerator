@@ -134,13 +134,20 @@ def compute_hole_scale_range(
     Returns:
         (D_min, D_max): 가능한 직경/폭 범위
     """
-    W = dim.width if dim.width is not None else 0.0
-    H = dim.height if dim.height is not None else W
+    # None 값 처리 (명시적 검사)
+    W = dim.width if dim.width is not None and dim.width > 0 else 0.0
+    H = dim.height if dim.height is not None and dim.height > 0 else 0.0
     
+    # W가 유효하지 않으면 피처 배치 불가
     if W <= 0:
         return 0.0, 0.0
     
-    min_dim = min(W, H) if H > 0 else W
+    # H가 유효하지 않으면 W만 사용 (1D 제약)
+    if H <= 0:
+        min_dim = W
+    else:
+        min_dim = min(W, H)
+    
     effective_dim = min_dim - 2 * params.clearance
     
     if effective_dim <= 0:
@@ -148,7 +155,10 @@ def compute_hole_scale_range(
     
     D_max = params.diameter_max_ratio * effective_dim
     D_min = params.diameter_min
-    D_max = max(0.0, D_max)
+    
+    # D_max가 D_min보다 작으면 유효하지 않은 범위
+    if D_max < D_min:
+        return 0.0, 0.0
     
     return D_min, D_max
 

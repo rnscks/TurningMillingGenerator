@@ -113,6 +113,30 @@ def get_tree_stats(tree: Dict) -> Dict:
     nodes = tree.get('nodes', [])
     labels = [n.get('label', '') for n in nodes]
     
+    # Base의 Step 자식 개수 확인 (양방향 Step 여부)
+    base_step_children = 0
+    for n in nodes:
+        if n.get('label') == 'b':
+            children_ids = n.get('children', [])
+            base_step_children = sum(
+                1 for cid in children_ids 
+                if nodes[cid].get('label') == 's'
+            )
+            break
+    
+    # 형제 Groove 존재 여부 확인
+    has_sibling_grooves = False
+    for n in nodes:
+        if n.get('label') in ['b', 's']:
+            children_ids = n.get('children', [])
+            groove_children = sum(
+                1 for cid in children_ids 
+                if nodes[cid].get('label') == 'g'
+            )
+            if groove_children >= 2:
+                has_sibling_grooves = True
+                break
+    
     return {
         'n_nodes': tree.get('N', len(nodes)),
         'max_depth': tree.get('max_depth_constraint', 0),
@@ -120,7 +144,45 @@ def get_tree_stats(tree: Dict) -> Dict:
         's_count': labels.count('s'),
         'g_count': labels.count('g'),
         'b_count': labels.count('b'),
+        'base_step_children': base_step_children,  # 양방향 Step 여부 (2 이상이면 양방향)
+        'has_sibling_grooves': has_sibling_grooves,  # 형제 Groove 존재 여부
     }
+
+
+def find_bidirectional_step_trees(trees: List[Dict]) -> List[int]:
+    """
+    양방향 Step 트리 인덱스 반환 (Base에 Step 자식이 2개 이상).
+    
+    Args:
+        trees: 트리 딕셔너리 리스트
+        
+    Returns:
+        양방향 Step 트리 인덱스 리스트
+    """
+    result = []
+    for i, tree in enumerate(trees):
+        stats = get_tree_stats(tree)
+        if stats['base_step_children'] >= 2:
+            result.append(i)
+    return result
+
+
+def find_sibling_groove_trees(trees: List[Dict]) -> List[int]:
+    """
+    형제 Groove가 있는 트리 인덱스 반환.
+    
+    Args:
+        trees: 트리 딕셔너리 리스트
+        
+    Returns:
+        형제 Groove 트리 인덱스 리스트
+    """
+    result = []
+    for i, tree in enumerate(trees):
+        stats = get_tree_stats(tree)
+        if stats['has_sibling_grooves']:
+            result.append(i)
+    return result
 
 
 def filter_trees(
