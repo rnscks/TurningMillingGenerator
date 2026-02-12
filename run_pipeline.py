@@ -318,7 +318,7 @@ def main():
             # Groove 파라미터
             groove_depth_range=(0.4, 0.8),
             groove_width_range=(1.5, 3.0),
-            groove_margin=0.3,
+            groove_margin_ratio=0.15,
             # 챔퍼/라운드
             chamfer_range=(0.3, 0.8),
             fillet_range=(0.3, 0.8),

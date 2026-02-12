@@ -47,7 +47,7 @@ class TurningParams:
     # Groove 파라미터
     groove_depth_range: Tuple[float, float] = (0.4, 0.8)     # groove 깊이
     groove_width_range: Tuple[float, float] = (1.5, 3.0)     # groove 폭
-    groove_margin: float = 0.3                                # groove 위아래 여유
+    groove_margin_ratio: float = 0.15                         # groove 양쪽 여유 비율 (부모 영역 대비)
     
     min_remaining_radius: float = 2.0
     
@@ -75,11 +75,12 @@ class Region:
 
 @dataclass
 class RequiredSpace:
-    """Bottom-Up으로 계산된 필요 공간"""
-    height: float           # 필요한 z 높이
+    """Bottom-Up으로 계산된 필요 공간 (margin 포함, 한 곳에서만 계산)"""
+    height: float           # 필요한 z 높이 (margin 포함 총 크기)
     depth: float            # 필요한 반경 깊이 (누적)
-    feature_height: float   # 자신의 피처 높이 (step height 또는 groove width)
+    feature_height: float   # 자신의 피처 높이 (step height 또는 groove 커팅 폭)
     feature_depth: float    # 자신의 피처 깊이
+    margin: float = 0.0     # 자신의 z방향 margin (양쪽 각각)
 
 
 class TreeNode:
@@ -271,46 +272,66 @@ class TreeTurningGenerator:
             (c.required_space.depth for c in node.children), default=0.0
         )
         
-        # 3. 노드 타입에 따른 자신의 피처 크기 결정
+        # 3. 노드 타입에 따른 자신의 피처 크기와 margin 결정
+        #    ※ margin은 여기서 한 번만 계산하고 RequiredSpace에 저장
+        #    ※ 배치 시에는 저장된 margin을 그대로 사용 (재계산 없음)
+        
         if node.label == 'b':
-            # Base (Stock): Step 자식들만 높이에 영향 (Groove는 내부 배치)
+            # Base (Stock): margin 없음 (Stock 자체가 최외곽)
             feature_height = 0.0
             feature_depth = 0.0
-            total_height = step_children_height
+            node_margin = 0.0
+            total_height = max(step_children_height, groove_children_height)
             total_depth = children_max_depth
             
         elif node.label == 's':
-            # Step: Step 자식들 높이만 영향 (Groove는 Step 영역 내부 배치)
+            # Step: 고정 margin
             feature_height = random.uniform(*self.params.step_height_range)
             feature_depth = random.uniform(*self.params.step_depth_range)
+            node_margin = self.params.step_margin
             
-            # Step의 총 높이 = Step 자식들 높이 + 자신의 피처 높이 + margin
-            # Groove 자식들은 Step 영역 내부에 배치되므로 별도 공간 불필요
-            margin = self.params.step_margin
-            total_height = step_children_height + feature_height + 2 * margin
+            step_based_height = step_children_height + feature_height + 2 * node_margin
+            # Groove 자식도 수용 가능하도록 보장
+            total_height = max(step_based_height, groove_children_height)
             total_depth = children_max_depth + feature_depth
             
         elif node.label == 'g':
-            # Groove: Groove 자식들 높이를 감싸는 groove
-            feature_height = random.uniform(*self.params.groove_width_range)
+            # Groove: 비율 기반 margin (feature_height의 groove_margin_ratio)
+            random_width = random.uniform(*self.params.groove_width_range)
             feature_depth = random.uniform(*self.params.groove_depth_range)
+            ratio = self.params.groove_margin_ratio
             
-            # Groove의 총 높이 = max(자신의 폭, Groove 자식들 높이) + margin
-            margin = self.params.groove_margin
-            total_height = max(feature_height, groove_children_height) + 2 * margin
+            # 자식 groove들을 내부에 수용할 수 있도록 커팅 폭 결정
+            if groove_children:
+                # feature_height 내에서 자식 배치: 사용 가능 = feature_height - 2*margin
+                # margin = feature_height * ratio이므로 사용 가능 = feature_height * (1-2r)
+                # 자식 총 필요 = groove_children_height
+                # → feature_height >= groove_children_height / (1-2r)
+                usable_ratio = 1.0 - 2.0 * ratio
+                if usable_ratio <= 0:
+                    usable_ratio = 0.5
+                min_width = groove_children_height / usable_ratio
+                feature_height = max(random_width, min_width)
+            else:
+                feature_height = random_width
+            
+            node_margin = feature_height * ratio
+            total_height = feature_height + 2 * node_margin
             total_depth = children_max_depth + feature_depth
             
         else:
             feature_height = 0.0
             feature_depth = 0.0
-            total_height = children_total_height
+            node_margin = 0.0
+            total_height = step_children_height + groove_children_height
             total_depth = children_max_depth
         
         node.required_space = RequiredSpace(
             height=total_height,
             depth=total_depth,
             feature_height=feature_height,
-            feature_depth=feature_depth
+            feature_depth=feature_depth,
+            margin=node_margin
         )
         
         return node.required_space
@@ -367,24 +388,22 @@ class TreeTurningGenerator:
         
         new_radius = parent_region.radius - step_depth
         
-        # 방향에 따른 z 위치 결정 (Step 자식 공간만 확보)
-        # Groove는 부모 Step 영역 내부에 배치되므로 추가 공간 불필요
-        step_children_height = sum(
-            c.required_space.height for c in node.children if c.label == 's'
-        ) if node.children else 0
-        margin = self.params.step_margin
+        # 방향에 따른 z 위치 결정
+        # required.height는 Step 자식 + Groove 자식 모두 수용하는 크기
+        # (Bottom-Up에서 max(step_based, groove_children)로 계산됨)
+        cut_size = required.height
         
         if direction == 'top':
             # Top: 부모 상단에서 시작, 아래로 확장
             cut_z_max = parent_region.z_max
-            cut_z_min = cut_z_max - (step_children_height + step_height + 2 * margin)
+            cut_z_min = cut_z_max - cut_size
             cut_z_min = max(cut_z_min, parent_region.z_min)  # 범위 제한
             
             actual_step_height = cut_z_max - cut_z_min
         else:
             # Bottom: 부모 하단에서 시작, 위로 확장
             cut_z_min = parent_region.z_min
-            cut_z_max = cut_z_min + (step_children_height + step_height + 2 * margin)
+            cut_z_max = cut_z_min + cut_size
             cut_z_max = min(cut_z_max, parent_region.z_max)  # 범위 제한
             
             actual_step_height = cut_z_max - cut_z_min
@@ -443,7 +462,8 @@ class TreeTurningGenerator:
         new_radius = parent_region.radius - groove_depth
         
         # z 위치: 형제 groove들을 Z축으로 분산 배치
-        margin = self.params.groove_margin
+        # margin은 bottom-up에서 이미 계산됨 (재계산 없음)
+        margin = required.margin
         available_height = parent_region.height - 2 * margin
         
         if total_grooves == 1:
@@ -452,13 +472,11 @@ class TreeTurningGenerator:
             zpos = center_z - groove_width / 2
         else:
             # 여러 groove: Z축으로 분산 배치
-            # 전체 groove들이 차지할 총 높이
             total_groove_height = sum(
                 c.required_space.height for c in node.parent_node.children 
                 if c.label == 'g'
             ) if hasattr(node, 'parent_node') and node.parent_node else required.height
             
-            # 사용 가능한 공간에서 균등 분할
             spacing = available_height / total_grooves
             zpos = parent_region.z_min + margin + groove_index * spacing
         
@@ -850,6 +868,9 @@ class TreeTurningGenerator:
     ) -> Optional[Region]:
         """
         Groove 적용 (검증 포함, 실패 시 재시도).
+        
+        형제 groove들은 순차적으로 배치되어 겹치지 않도록 보장.
+        groove_width가 부모 영역을 초과하면 축소 적용.
         """
         required = node.required_space
         groove_width = required.feature_height
@@ -862,26 +883,63 @@ class TreeTurningGenerator:
                 return None
         
         new_radius = parent_region.radius - groove_depth
-        margin = self.params.groove_margin
-        available_height = parent_region.height - 2 * margin
+        # margin은 bottom-up에서 이미 계산되어 저장됨 (재계산 없음)
+        groove_margin = required.margin
         
         for attempt in range(max_retries):
-            # Z 위치 계산 (분산 배치)
+            # Z 위치 계산
             if total_grooves == 1:
+                # 단일 groove: 중앙 배치
                 center_z = (parent_region.z_min + parent_region.z_max) / 2
                 zpos = center_z - groove_width / 2
+                zpos = max(zpos, parent_region.z_min + groove_margin)
+                zpos = min(zpos, parent_region.z_max - groove_width - groove_margin)
             else:
-                spacing = available_height / total_grooves
-                zpos = parent_region.z_min + margin + groove_index * spacing
-                # 재시도 시 약간의 랜덤 오프셋 추가
-                if attempt > 0:
-                    offset = random.uniform(-spacing * 0.3, spacing * 0.3)
-                    zpos = max(parent_region.z_min + margin, 
-                              min(zpos + offset, parent_region.z_max - groove_width - margin))
+                # 형제 groove: zone 기반 순차 배치 (겹침 + 단차쌍 누락 방지)
+                # 각 groove의 zone = margin + width + margin = height (bottom-up에서 계산됨)
+                if hasattr(node, 'parent_node') and node.parent_node:
+                    siblings = [c for c in node.parent_node.children if c.label == 'g']
+                    sibling_zones = [sib.required_space.height for sib in siblings]
+                    sibling_margins = [sib.required_space.margin for sib in siblings]
+                    sibling_widths = [sib.required_space.feature_height for sib in siblings]
+                else:
+                    sibling_zones = [required.height] * total_grooves
+                    sibling_margins = [groove_margin] * total_grooves
+                    sibling_widths = [groove_width] * total_grooves
+                
+                total_zone = sum(sibling_zones)
+                
+                # 전체 zone이 부모 영역 초과 시 비례 축소
+                if total_zone > parent_region.height:
+                    scale = parent_region.height / total_zone
+                    sibling_zones = [z * scale for z in sibling_zones]
+                    sibling_margins = [m * scale for m in sibling_margins]
+                    sibling_widths = [w * scale for w in sibling_widths]
+                    groove_width = sibling_widths[groove_index]
+                    groove_margin = sibling_margins[groove_index]
+                    total_zone = parent_region.height
+                
+                # 여유 공간을 균등 gap으로 분배
+                remaining = parent_region.height - total_zone
+                gap = remaining / (total_grooves + 1) if total_grooves > 0 else 0
+                
+                # 순차 누적: gap + [margin + width + margin] + gap + ...
+                zpos = parent_region.z_min + gap
+                for i in range(groove_index):
+                    zpos += sibling_zones[i] + gap
+                zpos += sibling_margins[groove_index]  # leading margin
+                
+                # 재시도 시 gap 범위 내에서 미세 조정
+                if attempt > 0 and gap > 0:
+                    offset = random.uniform(-gap * 0.3, gap * 0.3)
+                    zpos += offset
             
-            # 범위 제한
-            zpos = max(zpos, parent_region.z_min + margin)
-            zpos = min(zpos, parent_region.z_max - groove_width - margin)
+            # 범위 검증
+            zpos = max(zpos, parent_region.z_min + groove_margin)
+            zpos = min(zpos, parent_region.z_max - groove_width - groove_margin)
+            
+            if zpos < parent_region.z_min or zpos + groove_width > parent_region.z_max:
+                continue
             
             # Boolean Cut 수행
             try:
@@ -909,7 +967,8 @@ class TreeTurningGenerator:
                     direction=parent_region.direction
                 )
                 
-                print(f"    Groove: z=[{zpos:.2f}, {zpos + groove_width:.2f}], r={new_radius:.2f}")
+                print(f"    Groove: z=[{zpos:.2f}, {zpos + groove_width:.2f}], "
+                      f"r={new_radius:.2f}, w={groove_width:.2f}")
                 return new_region
                 
             except Exception as e:
