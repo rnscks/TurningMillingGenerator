@@ -33,15 +33,27 @@ class TestTurningParams:
         assert params.stock_radius_margin == (2.0, 5.0)
         assert params.step_depth_range == (0.8, 1.5)
         assert params.groove_depth_range == (0.4, 0.8)
+        assert params.groove_margin_ratio == 0.15
+        assert params.min_remaining_radius == 2.0
+        assert params.step_margin == 0.5
     
     def test_custom_params(self):
         """커스텀 파라미터 검증"""
         params = TurningParams(
             step_depth_range=(1.0, 2.0),
-            groove_width_range=(2.0, 4.0)
+            groove_width_range=(2.0, 4.0),
+            groove_margin_ratio=0.2
         )
         assert params.step_depth_range == (1.0, 2.0)
         assert params.groove_width_range == (2.0, 4.0)
+        assert params.groove_margin_ratio == 0.2
+    
+    def test_edge_feature_params(self):
+        """챔퍼/라운드 파라미터 검증"""
+        params = TurningParams()
+        assert params.chamfer_range == (0.3, 0.8)
+        assert params.fillet_range == (0.3, 0.8)
+        assert params.edge_feature_prob == 0.3
 
 
 class TestRegion:
@@ -58,6 +70,11 @@ class TestRegion:
         repr_str = repr(region)
         assert "z=[0.00, 10.00]" in repr_str
         assert "r=5.00" in repr_str
+    
+    def test_region_default_direction(self):
+        """Region 기본 direction은 None"""
+        region = Region(z_min=0.0, z_max=10.0, radius=5.0)
+        assert region.direction is None
 
 
 class TestRequiredSpace:
@@ -75,6 +92,34 @@ class TestRequiredSpace:
         assert space.depth == 2.0
         assert space.feature_height == 3.0
         assert space.feature_depth == 0.5
+        assert space.margin == 0.0  # 기본값
+    
+    def test_required_space_with_margin(self):
+        """RequiredSpace margin 포함 생성 검증"""
+        space = RequiredSpace(
+            height=10.0,
+            depth=2.0,
+            feature_height=3.0,
+            feature_depth=0.5,
+            margin=0.45
+        )
+        assert space.margin == 0.45
+    
+    def test_groove_margin_ratio_consistency(self):
+        """Groove margin = feature_height * ratio 관계 검증"""
+        ratio = 0.15
+        feature_height = 2.5
+        expected_margin = feature_height * ratio
+        
+        space = RequiredSpace(
+            height=feature_height + 2 * expected_margin,
+            depth=0.6,
+            feature_height=feature_height,
+            feature_depth=0.6,
+            margin=expected_margin
+        )
+        assert abs(space.margin - feature_height * ratio) < 1e-9
+        assert abs(space.height - (feature_height + 2 * space.margin)) < 1e-9
 
 
 class TestTreeTurningGeneratorBasic:
@@ -111,6 +156,97 @@ class TestTreeTurningGeneratorBasic:
         assert shape is not None
 
 
+class TestBottomUpCalculation:
+    """Bottom-Up 필요 공간 계산 테스트"""
+    
+    def test_required_space_computed(self):
+        """모든 노드에 required_space가 계산되는지 검증"""
+        trees = generate_trees(n_nodes=5, max_depth=4)
+        tree = trees[0]
+        
+        params = TurningParams()
+        gen = TreeTurningGenerator(params)
+        root = gen.load_tree(tree)
+        gen._calculate_required_space(root)
+        
+        # 모든 노드가 required_space를 가져야 함
+        def check_all_nodes(node):
+            assert node.required_space is not None, \
+                f"노드 {node.label}(id={node.id})에 required_space 없음"
+            for child in node.children:
+                check_all_nodes(child)
+        
+        check_all_nodes(root)
+    
+    def test_margin_stored_in_required_space(self):
+        """margin이 RequiredSpace에 저장되는지 검증"""
+        trees = generate_trees(n_nodes=6, max_depth=8)
+        
+        for tree in trees[:50]:
+            params = TurningParams()
+            gen = TreeTurningGenerator(params)
+            root = gen.load_tree(tree)
+            gen._calculate_required_space(root)
+            
+            def check_margin(node):
+                rs = node.required_space
+                if node.label == 'b':
+                    assert rs.margin == 0.0, "Base margin은 0이어야 함"
+                elif node.label == 's':
+                    assert rs.margin == params.step_margin, \
+                        f"Step margin은 {params.step_margin}이어야 함"
+                elif node.label == 'g':
+                    expected = rs.feature_height * params.groove_margin_ratio
+                    assert abs(rs.margin - expected) < 1e-6, \
+                        f"Groove margin({rs.margin}) != feature_height({rs.feature_height}) * ratio({params.groove_margin_ratio})"
+                for child in node.children:
+                    check_margin(child)
+            
+            check_margin(root)
+    
+    def test_groove_width_sufficient_for_children(self):
+        """Groove 커팅 폭이 자식 groove를 수용할 수 있는지 검증"""
+        trees = generate_trees(n_nodes=6, max_depth=8)
+        
+        for tree in trees[:50]:
+            params = TurningParams()
+            gen = TreeTurningGenerator(params)
+            root = gen.load_tree(tree)
+            gen._calculate_required_space(root)
+            
+            def check_groove_width(node):
+                if node.label == 'g':
+                    groove_children = [c for c in node.children if c.label == 'g']
+                    if groove_children:
+                        children_total = sum(c.required_space.height for c in groove_children)
+                        rs = node.required_space
+                        usable = rs.feature_height - 2 * rs.margin
+                        # 내부 사용 가능 공간이 자식 총 필요 높이 이상이어야 함
+                        # (약간의 부동소수점 오차 허용)
+                        assert usable >= children_total - 1e-6, \
+                            f"Groove 내부 공간({usable:.2f}) < 자식 총 필요({children_total:.2f})"
+                for child in node.children:
+                    check_groove_width(child)
+            
+            check_groove_width(root)
+    
+    def test_base_height_covers_groove_children(self):
+        """Base 높이가 Groove 자식 높이를 수용하는지 검증"""
+        trees = generate_trees(n_nodes=6, max_depth=8)
+        
+        for tree in trees[:50]:
+            params = TurningParams()
+            gen = TreeTurningGenerator(params)
+            root = gen.load_tree(tree)
+            gen._calculate_required_space(root)
+            
+            groove_children = [c for c in root.children if c.label == 'g']
+            if groove_children:
+                groove_total = sum(c.required_space.height for c in groove_children)
+                assert root.required_space.height >= groove_total - 1e-6, \
+                    f"Base height({root.required_space.height:.2f}) < groove children({groove_total:.2f})"
+
+
 class TestGrooveDistribution:
     """Groove 분산 배치 테스트"""
     
@@ -140,8 +276,6 @@ class TestGrooveDistribution:
         params = TurningParams()
         gen = TreeTurningGenerator(params)
         
-        # 형상 생성 성공 확인
-        # (출력 로그에서 서로 다른 Z 위치 확인 가능)
         shape = gen.generate_from_tree(tree)
         assert shape is not None, "형제 Groove 트리에서 형상 생성 실패"
 
@@ -173,8 +307,6 @@ class TestStepDirection:
         params = TurningParams()
         gen = TreeTurningGenerator(params)
         
-        # 형상 생성 성공 확인
-        # (출력 로그에서 top/bottom 방향 확인 가능)
         shape = gen.generate_from_tree(tree)
         assert shape is not None, "양방향 Step 트리에서 형상 생성 실패"
 
@@ -208,8 +340,6 @@ class TestNestedGrooves:
         params = TurningParams()
         gen = TreeTurningGenerator(params)
         
-        # 형상 생성 성공 확인
-        # (출력 로그에서 반경 감소 확인 가능)
         shape = gen.generate_from_tree(tree)
         assert shape is not None, "중첩 Groove 트리에서 형상 생성 실패"
 
@@ -248,7 +378,6 @@ class TestShapeGeneration:
             shape = gen.generate_from_tree(tree)
             
             if shape is not None:
-                # Stock 크기 범위 검증
                 assert gen.stock_height > 5.0, "Stock 높이가 너무 작음"
                 assert gen.stock_height < 100.0, "Stock 높이가 너무 큼"
                 assert gen.stock_radius > 3.0, "Stock 반경이 너무 작음"
@@ -287,10 +416,8 @@ class TestTwoStageProcessing:
     
     def test_step_then_groove_order(self):
         """Step이 먼저 처리되고 Groove가 나중에 처리되는지 검증"""
-        # 간단한 트리로 테스트: b(s(g))
         trees = generate_trees(n_nodes=3, max_depth=3)
         
-        # s 아래에 g가 있는 트리 찾기
         for tree in trees:
             nodes = tree['nodes']
             for n in nodes:
@@ -316,7 +443,6 @@ class TestGrooveValidation:
         """Groove 실패 시 재시도 검증"""
         trees = generate_trees(n_nodes=6, max_depth=8)
         
-        # 형제 Groove가 있는 트리 찾기
         for tree in trees[:100]:
             nodes = tree['nodes']
             for n in nodes:
@@ -334,6 +460,53 @@ class TestGrooveValidation:
                         return
         
         pytest.skip("형제 Groove 트리를 찾지 못함")
+
+
+class TestMarginConsistency:
+    """margin 일관성 테스트 - margin이 한 곳(bottom-up)에서만 결정되고 일관되게 사용되는지 검증"""
+    
+    def test_groove_margin_ratio_based(self):
+        """Groove margin이 비율 기반으로 계산되는지 검증"""
+        params = TurningParams(groove_margin_ratio=0.2)
+        gen = TreeTurningGenerator(params)
+        
+        trees = generate_trees(n_nodes=6, max_depth=8)
+        for tree in trees[:30]:
+            root = gen.load_tree(tree)
+            gen._calculate_required_space(root)
+            
+            def check_groove_margin(node):
+                if node.label == 'g':
+                    rs = node.required_space
+                    expected = rs.feature_height * 0.2
+                    assert abs(rs.margin - expected) < 1e-6, \
+                        f"Groove margin({rs.margin:.4f}) != feature_height({rs.feature_height:.4f}) * 0.2"
+                for child in node.children:
+                    check_groove_margin(child)
+            
+            check_groove_margin(root)
+    
+    def test_groove_zone_equals_height(self):
+        """Groove zone(= height) = feature_height + 2 * margin 검증"""
+        params = TurningParams()
+        gen = TreeTurningGenerator(params)
+        
+        trees = generate_trees(n_nodes=6, max_depth=8)
+        for tree in trees[:30]:
+            root = gen.load_tree(tree)
+            gen._calculate_required_space(root)
+            
+            def check_zone(node):
+                if node.label == 'g' and len(node.children) == 0:
+                    # 리프 groove: height = feature_height + 2 * margin
+                    rs = node.required_space
+                    expected = rs.feature_height + 2 * rs.margin
+                    assert abs(rs.height - expected) < 1e-6, \
+                        f"Groove height({rs.height:.4f}) != feature({rs.feature_height:.4f}) + 2*margin({rs.margin:.4f})"
+                for child in node.children:
+                    check_zone(child)
+            
+            check_zone(root)
 
 
 if __name__ == "__main__":

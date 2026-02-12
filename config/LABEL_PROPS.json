@@ -1,0 +1,22 @@
+{
+    "LABEL_NAMES": [
+        "stock",
+        "step",
+        "groove",
+        "chamfer",
+        "fillet",
+        "blind_hole",
+        "through_hole",
+        "rectangular_pocket"
+    ],
+    "LABEL_COLORS": {
+        "stock":              [105, 105, 105],
+        "step":               [0,   206, 209],
+        "groove":             [255, 69,  0],
+        "chamfer":            [255, 0,   255],
+        "fillet":             [57,  255, 20],
+        "blind_hole":         [255, 20,  147],
+        "through_hole":       [255, 0,   0],
+        "rectangular_pocket": [0,   0,   139]
+    }
+}

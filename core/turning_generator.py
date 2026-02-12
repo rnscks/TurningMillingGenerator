@@ -26,6 +26,8 @@ from OCC.Core.GeomAbs import GeomAbs_Circle
 from OCC.Extend.TopologyUtils import TopologyExplorer
 
 from utils.step_io import save_step
+from core.design_operation import DesignOperation
+from core.label_maker import LabelMaker, Labels
 
 
 # ============================================================================
@@ -117,6 +119,7 @@ class TreeTurningGenerator:
         self.shape: Optional[TopoDS_Shape] = None
         self.stock_height: float = 0.0
         self.stock_radius: float = 0.0
+        self._label_maker: Optional[LabelMaker] = None
         
     def load_tree(self, tree_data: Dict) -> TreeNode:
         """JSON 트리 데이터를 TreeNode 구조로 변환."""
@@ -152,6 +155,23 @@ class TreeTurningGenerator:
         
         return self.shape
     
+    def _cut_with_tracking(self, tool_shape: TopoDS_Shape, label: int) -> None:
+        """
+        Boolean Cut + 라벨 추적 (옵션).
+        
+        label_maker가 설정되어 있으면 DesignOperation으로 래핑하여
+        Face History를 추적하고 라벨을 갱신합니다.
+        label_maker가 없으면 기존과 동일하게 직접 Cut을 수행합니다.
+        """
+        if self._label_maker is not None:
+            op = DesignOperation(self.shape)
+            result = op.cut(tool_shape)
+            if result is not None:
+                self.shape = result
+                self._label_maker.update_label(op, label)
+        else:
+            self.shape = BRepAlgoAPI_Cut(self.shape, tool_shape).Shape()
+    
     def _collect_circular_edges(self) -> List[TopoDS_Edge]:
         """원형 엣지들 수집 (터닝에서 챔퍼/라운드 적용 가능한 엣지)"""
         circular_edges = []
@@ -172,33 +192,47 @@ class TreeTurningGenerator:
         return circular_edges
     
     def _apply_chamfer(self, edge: TopoDS_Edge, distance: float) -> bool:
-        """엣지에 챔퍼 적용."""
+        """엣지에 챔퍼 적용 (+ 라벨 추적)."""
         try:
-            builder = BRepFilletAPI_MakeChamfer(self.shape)
-            builder.Add(distance, edge)
-            builder.Build()
-            
-            if builder.IsDone():
-                new_shape = builder.Shape()
-                if new_shape and not new_shape.IsNull():
+            if self._label_maker is not None:
+                op = DesignOperation(self.shape)
+                new_shape = op.chamfer(edge, distance)
+                if new_shape:
                     self.shape = new_shape
+                    self._label_maker.update_label(op, Labels.CHAMFER)
                     return True
+            else:
+                builder = BRepFilletAPI_MakeChamfer(self.shape)
+                builder.Add(distance, edge)
+                builder.Build()
+                if builder.IsDone():
+                    new_shape = builder.Shape()
+                    if new_shape and not new_shape.IsNull():
+                        self.shape = new_shape
+                        return True
         except Exception:
             pass
         return False
     
     def _apply_fillet(self, edge: TopoDS_Edge, radius: float) -> bool:
-        """엣지에 라운드(필렛) 적용."""
+        """엣지에 라운드(필렛) 적용 (+ 라벨 추적)."""
         try:
-            builder = BRepFilletAPI_MakeFillet(self.shape)
-            builder.Add(radius, edge)
-            builder.Build()
-            
-            if builder.IsDone():
-                new_shape = builder.Shape()
-                if new_shape and not new_shape.IsNull():
+            if self._label_maker is not None:
+                op = DesignOperation(self.shape)
+                new_shape = op.fillet(edge, radius)
+                if new_shape:
                     self.shape = new_shape
+                    self._label_maker.update_label(op, Labels.FILLET)
                     return True
+            else:
+                builder = BRepFilletAPI_MakeFillet(self.shape)
+                builder.Add(radius, edge)
+                builder.Build()
+                if builder.IsDone():
+                    new_shape = builder.Shape()
+                    if new_shape and not new_shape.IsNull():
+                        self.shape = new_shape
+                        return True
         except Exception:
             pass
         return False
@@ -417,7 +451,7 @@ class TreeTurningGenerator:
         inner = BRepPrimAPI_MakeCylinder(axis, new_radius, actual_step_height).Shape()
         
         cut_shape = BRepAlgoAPI_Cut(outer, inner).Shape()
-        self.shape = BRepAlgoAPI_Cut(self.shape, cut_shape).Shape()
+        self._cut_with_tracking(cut_shape, Labels.STEP)
         
         new_region = Region(
             z_min=cut_z_min,
@@ -490,7 +524,7 @@ class TreeTurningGenerator:
         inner = BRepPrimAPI_MakeCylinder(axis, new_radius, groove_width).Shape()
         
         cut_shape = BRepAlgoAPI_Cut(outer, inner).Shape()
-        self.shape = BRepAlgoAPI_Cut(self.shape, cut_shape).Shape()
+        self._cut_with_tracking(cut_shape, Labels.GROOVE)
         
         new_region = Region(
             z_min=zpos,
@@ -626,7 +660,7 @@ class TreeTurningGenerator:
             inner = BRepPrimAPI_MakeCylinder(axis, new_radius, step_height).Shape()
             
             cut_shape = BRepAlgoAPI_Cut(outer, inner).Shape()
-            self.shape = BRepAlgoAPI_Cut(self.shape, cut_shape).Shape()
+            self._cut_with_tracking(cut_shape, Labels.STEP)
             
             new_region = Region(
                 z_min=cut_z_min,
@@ -644,7 +678,7 @@ class TreeTurningGenerator:
             inner = BRepPrimAPI_MakeCylinder(axis, new_radius, step_height).Shape()
             
             cut_shape = BRepAlgoAPI_Cut(outer, inner).Shape()
-            self.shape = BRepAlgoAPI_Cut(self.shape, cut_shape).Shape()
+            self._cut_with_tracking(cut_shape, Labels.STEP)
             
             new_region = Region(
                 z_min=cut_z_min,
@@ -693,7 +727,7 @@ class TreeTurningGenerator:
         inner = BRepPrimAPI_MakeCylinder(axis, new_radius, groove_width).Shape()
         
         cut_shape = BRepAlgoAPI_Cut(outer, inner).Shape()
-        self.shape = BRepAlgoAPI_Cut(self.shape, cut_shape).Shape()
+        self._cut_with_tracking(cut_shape, Labels.GROOVE)
         
         new_region = Region(
             z_min=zpos,
@@ -705,7 +739,12 @@ class TreeTurningGenerator:
         print(f"    Groove: z=[{zpos:.2f}, {zpos + groove_width:.2f}], r={new_radius:.2f}")
         return new_region
     
-    def generate_from_tree(self, tree_data: Dict, apply_edge_features: bool = True) -> TopoDS_Shape:
+    def generate_from_tree(
+        self, 
+        tree_data: Dict, 
+        apply_edge_features: bool = True,
+        label_maker: Optional[LabelMaker] = None
+    ) -> TopoDS_Shape:
         """
         트리 데이터로부터 터닝 모델 생성 (Bottom-Up 방식, 2단계 처리).
         
@@ -719,10 +758,13 @@ class TreeTurningGenerator:
         Args:
             tree_data: 트리 JSON 데이터
             apply_edge_features: 챔퍼/라운드 적용 여부
+            label_maker: Face 라벨 관리자 (None이면 라벨링 비활성)
             
         Returns:
             생성된 TopoDS_Shape
         """
+        self._label_maker = label_maker
+        
         root = self.load_tree(tree_data)
         
         # 1. Bottom-Up: 필요한 공간 계산 (리프 → 루트)
@@ -732,6 +774,10 @@ class TreeTurningGenerator:
         self._create_stock_from_requirements(root)
         print(f"  Stock: height={self.stock_height:.2f}, radius={self.stock_radius:.2f} "
               f"(required: h={root.required_space.height:.2f}, d={root.required_space.depth:.2f})")
+        
+        # 라벨링: Stock 생성 후 모든 Face에 base_label 부여
+        if self._label_maker is not None:
+            self._label_maker.initialize(self.shape, base_label=Labels.STOCK)
         
         # 3. 2단계 처리: Step 먼저 → Groove 나중
         # 3-1. Step만 먼저 처리하여 모든 region 확정
@@ -952,13 +998,19 @@ class TreeTurningGenerator:
                 if cut_shape.IsNull():
                     continue
                 
-                new_shape = BRepAlgoAPI_Cut(self.shape, cut_shape).Shape()
-                
-                if new_shape.IsNull():
-                    continue
-                
-                # 형상 업데이트
-                self.shape = new_shape
+                # 라벨 추적이 활성화된 경우 DesignOperation 사용
+                if self._label_maker is not None:
+                    op = DesignOperation(self.shape)
+                    new_shape = op.cut(cut_shape)
+                    if new_shape is None:
+                        continue
+                    self.shape = new_shape
+                    self._label_maker.update_label(op, Labels.GROOVE)
+                else:
+                    new_shape = BRepAlgoAPI_Cut(self.shape, cut_shape).Shape()
+                    if new_shape.IsNull():
+                        continue
+                    self.shape = new_shape
                 
                 new_region = Region(
                     z_min=zpos,

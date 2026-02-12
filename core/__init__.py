@@ -18,6 +18,8 @@ from core.milling_adder import (
     FeatureType,
     compute_hole_scale_range,
 )
+from core.design_operation import DesignOperation
+from core.label_maker import LabelMaker, Labels
 
 __all__ = [
     'TreeGenerator', 'TreeGeneratorParams', 'generate_trees',
@@ -26,4 +28,5 @@ __all__ = [
     'MillingFeatureAdder', 'FeatureParams', 'HoleParams',
     'ValidFaceInfo', 'FeaturePlacement', 'HolePlacement',
     'FeatureType', 'compute_hole_scale_range',
+    'DesignOperation', 'LabelMaker', 'Labels',
 ]

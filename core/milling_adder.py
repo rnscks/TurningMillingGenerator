@@ -31,6 +31,8 @@ from OCC.Core.gp import gp_Trsf
 from OCC.Extend.TopologyUtils import TopologyExplorer
 
 from core.face_analyzer import FaceAnalyzer, FaceDimensionResult
+from core.design_operation import DesignOperation
+from core.label_maker import LabelMaker, Labels
 
 
 # ============================================================================
@@ -246,24 +248,21 @@ def create_blind_hole(
     direction: gp_Dir,
     diameter: float, 
     depth: float
-) -> Optional[TopoDS_Shape]:
-    """블라인드 홀 생성 (Boolean Cut)."""
+) -> Tuple[Optional[TopoDS_Shape], Optional[DesignOperation]]:
+    """블라인드 홀 생성 (Boolean Cut + History 추적)."""
     try:
         radius = diameter / 2
         axis = gp_Ax2(center, direction)
         hole_cyl = BRepPrimAPI_MakeCylinder(axis, radius, depth).Shape()
         
-        cut_op = BRepAlgoAPI_Cut(shape, hole_cyl)
-        cut_op.Build()
-        
-        if cut_op.IsDone():
-            result = cut_op.Shape()
-            if result and not result.IsNull():
-                return result
+        op = DesignOperation(shape)
+        result = op.cut(hole_cyl)
+        if result is not None:
+            return result, op
     except Exception as e:
         print(f"    블라인드 홀 생성 실패: {e}")
     
-    return None
+    return None, None
 
 
 def create_through_hole(
@@ -273,27 +272,23 @@ def create_through_hole(
     diameter: float, 
     available_depth: float,
     extra: float = 2.0
-) -> Optional[TopoDS_Shape]:
-    """관통 홀 생성 (Boolean Cut)."""
+) -> Tuple[Optional[TopoDS_Shape], Optional[DesignOperation]]:
+    """관통 홀 생성 (Boolean Cut + History 추적)."""
     try:
         radius = diameter / 2
-        # 관통을 위해 충분히 긴 깊이
         through_depth = available_depth + extra
         
         axis = gp_Ax2(center, direction)
         hole_cyl = BRepPrimAPI_MakeCylinder(axis, radius, through_depth).Shape()
         
-        cut_op = BRepAlgoAPI_Cut(shape, hole_cyl)
-        cut_op.Build()
-        
-        if cut_op.IsDone():
-            result = cut_op.Shape()
-            if result and not result.IsNull():
-                return result
+        op = DesignOperation(shape)
+        result = op.cut(hole_cyl)
+        if result is not None:
+            return result, op
     except Exception as e:
         print(f"    관통 홀 생성 실패: {e}")
     
-    return None
+    return None, None
 
 
 def create_rectangular_pocket(
@@ -303,8 +298,8 @@ def create_rectangular_pocket(
     width: float,
     length: float,
     depth: float,
-    theta: float = 0.0  # 원통 면에서의 각도 (라디안)
-) -> Optional[TopoDS_Shape]:
+    theta: float = 0.0
+) -> Tuple[Optional[TopoDS_Shape], Optional[DesignOperation]]:
     """
     사각 포켓 (블라인드) 생성.
     
@@ -313,18 +308,12 @@ def create_rectangular_pocket(
     - length: 축 방향 (Z 방향)
     """
     try:
-        # 로컬 좌표계에서 박스 생성
-        # 박스 원점을 중심에 맞추기 위해 오프셋
         half_w = width / 2
         half_l = length / 2
         
-        # 방향 벡터
         dir_vec = gp_Vec(direction)
         
-        # 방향에 수직인 두 벡터 (로컬 X, Y)
-        # Z축을 기준으로 계산
         if abs(direction.Z()) > 0.9:
-            # 방향이 거의 Z 축일 경우
             local_x = gp_Dir(1, 0, 0)
         else:
             z_axis = gp_Dir(0, 0, 1)
@@ -334,31 +323,26 @@ def create_rectangular_pocket(
         local_y_vec = gp_Vec(direction).Crossed(gp_Vec(local_x))
         local_y = gp_Dir(local_y_vec)
         
-        # 박스 시작점 계산 (중심에서 -half_w, -half_l 오프셋)
         start_pt = gp_Pnt(
             center.X() - half_w * local_x.X() - half_l * local_y.X(),
             center.Y() - half_w * local_x.Y() - half_l * local_y.Y(),
             center.Z() - half_w * local_x.Z() - half_l * local_y.Z()
         )
         
-        # 박스 생성
         box_maker = BRepPrimAPI_MakeBox(
             gp_Ax2(start_pt, direction, local_x),
             width, length, depth
         )
         pocket_box = box_maker.Shape()
         
-        cut_op = BRepAlgoAPI_Cut(shape, pocket_box)
-        cut_op.Build()
-        
-        if cut_op.IsDone():
-            result = cut_op.Shape()
-            if result and not result.IsNull():
-                return result
+        op = DesignOperation(shape)
+        result = op.cut(pocket_box)
+        if result is not None:
+            return result, op
     except Exception as e:
         print(f"    사각 포켓 생성 실패: {e}")
     
-    return None
+    return None, None
 
 
 def create_rectangular_passage(
@@ -370,7 +354,7 @@ def create_rectangular_passage(
     available_depth: float,
     extra: float = 2.0,
     theta: float = 0.0
-) -> Optional[TopoDS_Shape]:
+) -> Tuple[Optional[TopoDS_Shape], Optional[DesignOperation]]:
     """사각 통로 (관통) 생성."""
     through_depth = available_depth + extra
     return create_rectangular_pocket(
@@ -386,7 +370,8 @@ def create_rectangular_passage(
 def create_hole(shape: TopoDS_Shape, center: gp_Pnt, direction: gp_Dir,
                 diameter: float, depth: float) -> Optional[TopoDS_Shape]:
     """형상에 홀 추가 (Boolean Cut) - 하위 호환성용."""
-    return create_blind_hole(shape, center, direction, diameter, depth)
+    result, _ = create_blind_hole(shape, center, direction, diameter, depth)
+    return result
 
 
 # ============================================================================
@@ -411,6 +396,7 @@ class MillingFeatureAdder:
         self.placements: List[FeaturePlacement] = []
         self.face_infos: List[ValidFaceInfo] = []
         self.analyzer = FaceAnalyzer()
+        self._label_maker: Optional[LabelMaker] = None
         
     def _analyze_face_for_milling(
         self,
@@ -534,12 +520,14 @@ class MillingFeatureAdder:
         
         # 피처 생성
         new_shape = None
+        operation = None
         placement = None
         
         if feature_type == FeatureType.BLIND_HOLE:
             depth = diameter * self.params.depth_ratio
-            new_shape = create_blind_hole(shape, center, direction, diameter, depth)
+            new_shape, operation = create_blind_hole(shape, center, direction, diameter, depth)
             if new_shape:
+                label = Labels.BLIND_HOLE
                 placement = FeaturePlacement(
                     feature_type=feature_type,
                     center_3d=center,
@@ -552,11 +540,12 @@ class MillingFeatureAdder:
                 )
                 
         elif feature_type == FeatureType.THROUGH_HOLE:
-            new_shape = create_through_hole(
+            new_shape, operation = create_through_hole(
                 shape, center, direction, diameter, 
                 available_depth, self.params.through_extra
             )
             if new_shape:
+                label = Labels.THROUGH_HOLE
                 placement = FeaturePlacement(
                     feature_type=feature_type,
                     center_3d=center,
@@ -569,16 +558,16 @@ class MillingFeatureAdder:
                 )
                 
         elif feature_type == FeatureType.RECTANGULAR_POCKET:
-            # 사각 피처 크기 결정
             aspect = random.uniform(self.params.rect_aspect_min, self.params.rect_aspect_max)
             width = diameter
             length = diameter * aspect
             depth = diameter * self.params.depth_ratio
             
-            new_shape = create_rectangular_pocket(
+            new_shape, operation = create_rectangular_pocket(
                 shape, center, direction, width, length, depth
             )
             if new_shape:
+                label = Labels.RECTANGULAR_POCKET
                 placement = FeaturePlacement(
                     feature_type=feature_type,
                     center_3d=center,
@@ -596,11 +585,12 @@ class MillingFeatureAdder:
             width = diameter
             length = diameter * aspect
             
-            new_shape = create_rectangular_passage(
+            new_shape, operation = create_rectangular_passage(
                 shape, center, direction, width, length,
                 available_depth, self.params.through_extra
             )
             if new_shape:
+                label = Labels.RECTANGULAR_POCKET  # passage도 pocket 라벨 사용
                 placement = FeaturePlacement(
                     feature_type=feature_type,
                     center_3d=center,
@@ -614,6 +604,9 @@ class MillingFeatureAdder:
                 )
         
         if new_shape and placement:
+            # 라벨 추적
+            if self._label_maker is not None and operation is not None:
+                self._label_maker.update_label(operation, label)
             return new_shape, placement
         
         return shape, None
@@ -633,7 +626,8 @@ class MillingFeatureAdder:
         target_face_types: List[str] = None,
         max_total_holes: int = 5,
         holes_per_face: int = 1,
-        feature_types: List[FeatureType] = None
+        feature_types: List[FeatureType] = None,
+        label_maker: Optional[LabelMaker] = None
     ) -> Tuple[TopoDS_Shape, List[FeaturePlacement]]:
         """
         형상에 밀링 특징형상 추가.
@@ -654,6 +648,8 @@ class MillingFeatureAdder:
         
         if feature_types is None:
             feature_types = list(FeatureType)
+        
+        self._label_maker = label_maker
         
         # 면 분석
         self.analyze_faces(shape)

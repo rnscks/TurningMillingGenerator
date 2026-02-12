@@ -16,6 +16,7 @@ from viz.tree_viz import (
     visualize_tree_statistics,
     visualize_trees,
 )
+from viz.label_viz import display_labeled_faces
 
 __all__ = [
     # 밀링 시각화
@@ -27,4 +28,6 @@ __all__ = [
     'visualize_trees_grid',
     'visualize_tree_statistics',
     'visualize_trees',
+    # 라벨 시각화
+    'display_labeled_faces',
 ]

@@ -5,7 +5,7 @@
 - tree_io: 트리 데이터 입출력 및 생성
 """
 
-from utils.step_io import load_step, save_step
+from utils.step_io import load_step, save_step, save_labeled_step
 from utils.tree_io import (
     load_trees, save_trees, 
     classify_trees_by_step_count, classify_trees_by_groove_count,
@@ -15,7 +15,7 @@ from utils.tree_io import (
 )
 
 __all__ = [
-    'load_step', 'save_step',
+    'load_step', 'save_step', 'save_labeled_step',
     'load_trees', 'save_trees',
     'classify_trees_by_step_count', 'classify_trees_by_groove_count',
     'get_tree_stats', 'filter_trees',

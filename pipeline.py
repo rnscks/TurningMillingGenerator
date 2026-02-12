@@ -13,6 +13,7 @@ from core import (
     TreeTurningGenerator, TurningParams,
     MillingFeatureAdder, HoleParams, HolePlacement
 )
+from core.label_maker import LabelMaker, Labels
 from utils import save_step
 
 
@@ -32,6 +33,9 @@ class TurningMillingParams:
     max_holes: int = 5
     holes_per_face: int = 2
     hole_probability: float = 0.8
+    
+    # 라벨링 설정
+    enable_labeling: bool = False
     
     def __post_init__(self):
         if self.turning is None:
@@ -56,6 +60,7 @@ class TurningMillingGenerator:
         
         self.shape: Optional[TopoDS_Shape] = None
         self.placements: List[HolePlacement] = []
+        self.label_maker: Optional[LabelMaker] = None
     
     def generate_from_tree(
         self,
@@ -72,10 +77,17 @@ class TurningMillingGenerator:
         Returns:
             (최종 형상, 홀 배치 정보 리스트)
         """
+        # 라벨링 초기화
+        if self.params.enable_labeling:
+            self.label_maker = LabelMaker()
+        else:
+            self.label_maker = None
+        
         # 1. 터닝 형상 생성
         turning_shape = self.turning_gen.generate_from_tree(
             tree, 
-            apply_edge_features=apply_edge_features
+            apply_edge_features=apply_edge_features,
+            label_maker=self.label_maker
         )
         
         if not self.params.enable_milling:
@@ -88,7 +100,8 @@ class TurningMillingGenerator:
             turning_shape,
             target_face_types=self.params.target_face_types,
             max_total_holes=self.params.max_holes,
-            holes_per_face=self.params.holes_per_face
+            holes_per_face=self.params.holes_per_face,
+            label_maker=self.label_maker
         )
         
         return self.shape, self.placements
