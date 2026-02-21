@@ -25,9 +25,10 @@ from OCC.Core.BRepAdaptor import BRepAdaptor_Curve
 from OCC.Core.GeomAbs import GeomAbs_Circle
 from OCC.Extend.TopologyUtils import TopologyExplorer
 
-from utils.step_io import save_step
 from core.design_operation import DesignOperation
 from core.label_maker import LabelMaker, Labels
+
+MAX_RECURSION_DEPTH = 50
 
 
 # ============================================================================
@@ -111,7 +112,6 @@ class TreeTurningGenerator:
     사용법:
         generator = TreeTurningGenerator(TurningParams())
         shape = generator.generate_from_tree(tree_data)
-        generator.save("output.step")
     """
     
     def __init__(self, params: TurningParams = None):
@@ -145,16 +145,6 @@ class TreeTurningGenerator:
                 
         return root
     
-    def _create_stock(self) -> TopoDS_Shape:
-        """Stock 원기둥 생성."""
-        self.stock_height = random.uniform(*self.params.stock_height_range)
-        self.stock_radius = random.uniform(*self.params.stock_radius_range)
-        
-        axis = gp_Ax2(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1))
-        self.shape = BRepPrimAPI_MakeCylinder(axis, self.stock_radius, self.stock_height).Shape()
-        
-        return self.shape
-    
     def _cut_with_tracking(self, tool_shape: TopoDS_Shape, label: int) -> None:
         """
         Boolean Cut + 라벨 추적 (옵션).
@@ -170,7 +160,10 @@ class TreeTurningGenerator:
                 self.shape = result
                 self._label_maker.update_label(op, label)
         else:
-            self.shape = BRepAlgoAPI_Cut(self.shape, tool_shape).Shape()
+            result = BRepAlgoAPI_Cut(self.shape, tool_shape).Shape()
+            if result is None or result.IsNull():
+                raise RuntimeError("Boolean Cut 실패: 결과 형상이 null입니다")
+            self.shape = result
     
     def _collect_circular_edges(self) -> List[TopoDS_Edge]:
         """원형 엣지들 수집 (터닝에서 챔퍼/라운드 적용 가능한 엣지)"""
@@ -273,20 +266,27 @@ class TreeTurningGenerator:
     # Bottom-Up: 필요 공간 계산 (리프 → 루트)
     # =========================================================================
     
-    def _calculate_required_space(self, node: TreeNode) -> RequiredSpace:
+    def _calculate_required_space(self, node: TreeNode, _depth: int = 0) -> RequiredSpace:
         """
         Bottom-Up으로 노드가 필요로 하는 공간 계산.
         리프 노드부터 시작해서 위로 전파.
         
         Args:
             node: 계산할 노드
+            _depth: 재귀 깊이 (내부용)
             
         Returns:
             필요한 공간 정보
         """
+        if _depth > MAX_RECURSION_DEPTH:
+            raise RecursionError(
+                f"최대 재귀 깊이({MAX_RECURSION_DEPTH}) 초과: "
+                f"node={node.label}(id={node.id})"
+            )
+        
         # 1. 먼저 모든 자식의 필요 공간을 재귀적으로 계산
         for child in node.children:
-            self._calculate_required_space(child)
+            self._calculate_required_space(child, _depth + 1)
         
         # 2. 자식들의 필요 높이/깊이 합산
         # Step 자식과 Groove 자식을 구분 (Groove는 부모 영역 내부에 배치되므로 추가 공간 불필요)
@@ -464,281 +464,6 @@ class TreeTurningGenerator:
               f"r={new_radius:.2f}, h={actual_step_height:.2f}")
         return new_region
     
-    def _apply_groove_bottomup(
-        self, 
-        node: TreeNode, 
-        parent_region: Region,
-        groove_index: int = 0,
-        total_grooves: int = 1
-    ) -> Optional[Region]:
-        """
-        Bottom-Up 방식으로 Groove 적용.
-        
-        Args:
-            node: Groove 노드
-            parent_region: 부모 영역
-            groove_index: 형제 groove 중 인덱스 (0부터 시작)
-            total_grooves: 형제 groove 총 개수
-            
-        Returns:
-            Groove 영역 (자식들이 사용할 영역)
-        """
-        required = node.required_space
-        groove_width = required.feature_height  # groove에서는 width가 feature_height
-        groove_depth = required.feature_depth
-        
-        # 반경 검증
-        if parent_region.radius - groove_depth < self.params.min_remaining_radius:
-            groove_depth = parent_region.radius - self.params.min_remaining_radius - 0.2
-            if groove_depth <= 0:
-                return None
-        
-        new_radius = parent_region.radius - groove_depth
-        
-        # z 위치: 형제 groove들을 Z축으로 분산 배치
-        # margin은 bottom-up에서 이미 계산됨 (재계산 없음)
-        margin = required.margin
-        available_height = parent_region.height - 2 * margin
-        
-        if total_grooves == 1:
-            # 단일 groove: 중앙 배치
-            center_z = (parent_region.z_min + parent_region.z_max) / 2
-            zpos = center_z - groove_width / 2
-        else:
-            # 여러 groove: Z축으로 분산 배치
-            total_groove_height = sum(
-                c.required_space.height for c in node.parent_node.children 
-                if c.label == 'g'
-            ) if hasattr(node, 'parent_node') and node.parent_node else required.height
-            
-            spacing = available_height / total_grooves
-            zpos = parent_region.z_min + margin + groove_index * spacing
-        
-        # 범위 제한
-        zpos = max(zpos, parent_region.z_min + margin)
-        zpos = min(zpos, parent_region.z_max - groove_width - margin)
-        
-        # Boolean Cut 수행
-        axis = gp_Ax2(gp_Pnt(0, 0, zpos), gp_Dir(0, 0, 1))
-        outer = BRepPrimAPI_MakeCylinder(axis, parent_region.radius, groove_width).Shape()
-        inner = BRepPrimAPI_MakeCylinder(axis, new_radius, groove_width).Shape()
-        
-        cut_shape = BRepAlgoAPI_Cut(outer, inner).Shape()
-        self._cut_with_tracking(cut_shape, Labels.GROOVE)
-        
-        new_region = Region(
-            z_min=zpos,
-            z_max=zpos + groove_width,
-            radius=new_radius,
-            direction=parent_region.direction
-        )
-        
-        print(f"    Groove: z=[{zpos:.2f}, {zpos + groove_width:.2f}], r={new_radius:.2f}")
-        return new_region
-    
-    def _process_node_bottomup(
-        self, 
-        node: TreeNode, 
-        parent_region: Region,
-        direction: str = None,
-        groove_index: int = 0,
-        total_grooves: int = 1
-    ):
-        """
-        Bottom-Up 방식으로 노드 처리.
-        공간이 이미 계산되어 있으므로 스킵 없이 처리.
-        
-        Args:
-            node: 처리할 노드
-            parent_region: 부모 영역 (None이면 Stock)
-            direction: Step의 경우 방향
-            groove_index: Groove의 경우 형제 인덱스
-            total_grooves: Groove의 경우 형제 총 개수
-        """
-        if node.label == 'b':
-            # Base (Stock) 노드
-            node.region = Region(
-                z_min=0,
-                z_max=self.stock_height,
-                radius=self.stock_radius,
-                direction=None
-            )
-            
-            # 자식들 처리 (Step은 top/bottom 번갈아, Groove는 분산 배치)
-            step_children = [c for c in node.children if c.label == 's']
-            groove_children = [c for c in node.children if c.label == 'g']
-            
-            for i, child in enumerate(step_children):
-                child_dir = 'top' if i % 2 == 0 else 'bottom'
-                self._process_node_bottomup(child, node.region, child_dir)
-            
-            # Groove는 인덱스 정보와 함께 처리
-            for i, child in enumerate(groove_children):
-                child.parent_node = node  # 부모 참조 저장
-                self._process_node_bottomup(child, node.region, None, i, len(groove_children))
-                
-        elif node.label == 's':
-            # Step 적용
-            new_region = self._apply_step_bottomup(node, parent_region, direction or 'top')
-            
-            if new_region is None:
-                node.region = parent_region
-                print(f"    [Warning] Step 적용 실패")
-            else:
-                node.region = new_region
-            
-            # 자식들 처리
-            step_children = [c for c in node.children if c.label == 's']
-            groove_children = [c for c in node.children if c.label == 'g']
-            
-            for child in step_children:
-                # Step 자식은 같은 방향으로
-                self._process_node_bottomup(child, node.region, direction)
-            
-            # Groove는 인덱스 정보와 함께 처리
-            for i, child in enumerate(groove_children):
-                child.parent_node = node  # 부모 참조 저장
-                self._process_node_bottomup(child, node.region, None, i, len(groove_children))
-                
-        elif node.label == 'g':
-            # Groove 적용 (인덱스 정보 사용)
-            new_region = self._apply_groove_bottomup(node, parent_region, groove_index, total_grooves)
-            
-            if new_region is None:
-                node.region = parent_region
-                print(f"    [Warning] Groove 적용 실패")
-            else:
-                node.region = new_region
-            
-            # Groove의 자식은 Groove만 가능 (트리 생성기 규칙)
-            # 자식 groove들도 인덱스 정보로 분산 배치
-            groove_children = [c for c in node.children if c.label == 'g']
-            for i, child in enumerate(groove_children):
-                child.parent_node = node  # 부모 참조 저장
-                self._process_node_bottomup(child, node.region, None, i, len(groove_children))
-    
-    # =========================================================================
-    # Legacy functions (하위 호환성)
-    # =========================================================================
-    
-    def _apply_step(self, parent_region: Region, direction: str) -> Optional[Region]:
-        """
-        Step 적용 - 부모 영역 내에서 새로운 step 영역 생성.
-        (하위 호환성을 위해 유지, 내부적으로 allocation 사용)
-        
-        Args:
-            parent_region: 부모 노드의 영역
-            direction: 'top' (위에서 깎음) or 'bottom' (아래에서 깎음)
-            
-        Returns:
-            새로 생성된 step 영역 (자식 노드들이 사용할 영역)
-        """
-        max_step_height = parent_region.height - self.params.min_base_height
-        if max_step_height < self.params.step_height_range[0]:
-            return None
-        
-        step_height = random.uniform(
-            self.params.step_height_range[0],
-            min(self.params.step_height_range[1], max_step_height)
-        )
-        step_depth = random.uniform(*self.params.step_depth_range)
-        
-        if parent_region.radius - step_depth < self.params.min_remaining_radius:
-            step_depth = parent_region.radius - self.params.min_remaining_radius - 0.5
-            # 음수 또는 너무 작은 깊이 방지
-            if step_depth <= 0 or step_depth <= 0.3:
-                return None
-        
-        new_radius = parent_region.radius - step_depth
-        
-        if direction == 'top':
-            cut_z_min = parent_region.z_max - step_height
-            cut_z_max = parent_region.z_max
-            
-            axis = gp_Ax2(gp_Pnt(0, 0, cut_z_min), gp_Dir(0, 0, 1))
-            outer = BRepPrimAPI_MakeCylinder(axis, parent_region.radius, step_height).Shape()
-            inner = BRepPrimAPI_MakeCylinder(axis, new_radius, step_height).Shape()
-            
-            cut_shape = BRepAlgoAPI_Cut(outer, inner).Shape()
-            self._cut_with_tracking(cut_shape, Labels.STEP)
-            
-            new_region = Region(
-                z_min=cut_z_min,
-                z_max=cut_z_max,
-                radius=new_radius,
-                direction='top'
-            )
-            
-        else:  # bottom
-            cut_z_min = parent_region.z_min
-            cut_z_max = parent_region.z_min + step_height
-            
-            axis = gp_Ax2(gp_Pnt(0, 0, cut_z_min), gp_Dir(0, 0, 1))
-            outer = BRepPrimAPI_MakeCylinder(axis, parent_region.radius, step_height).Shape()
-            inner = BRepPrimAPI_MakeCylinder(axis, new_radius, step_height).Shape()
-            
-            cut_shape = BRepAlgoAPI_Cut(outer, inner).Shape()
-            self._cut_with_tracking(cut_shape, Labels.STEP)
-            
-            new_region = Region(
-                z_min=cut_z_min,
-                z_max=cut_z_max,
-                radius=new_radius,
-                direction='bottom'
-            )
-        
-        print(f"    Step ({direction}): z=[{new_region.z_min:.2f}, {new_region.z_max:.2f}], r={new_radius:.2f}")
-        return new_region
-    
-    def _apply_groove(self, parent_region: Region) -> Optional[Region]:
-        """
-        Groove 적용 - 부모 영역 내에서 groove 생성.
-        (하위 호환성을 위해 유지)
-        
-        Returns:
-            groove가 차지하는 영역 (자식 노드들이 사용할 영역)
-        """
-        margin = self.params.min_base_height
-        max_groove_width = parent_region.height - 2 * margin
-        if max_groove_width < self.params.groove_width_range[0]:
-            return None
-        
-        groove_width = random.uniform(
-            self.params.groove_width_range[0],
-            min(self.params.groove_width_range[1], max_groove_width)
-        )
-        groove_depth = random.uniform(*self.params.groove_depth_range)
-        if parent_region.radius - groove_depth < self.params.min_remaining_radius:
-            groove_depth = parent_region.radius - self.params.min_remaining_radius - 0.3
-            # 음수 또는 너무 작은 깊이 방지
-            if groove_depth <= 0 or groove_depth <= 0.2:
-                return None
-        
-        available_range = parent_region.height - groove_width - 2 * margin
-        if available_range <= 0:
-            zpos = parent_region.z_min + margin
-        else:
-            zpos = parent_region.z_min + margin + random.uniform(0, available_range)
-        
-        new_radius = parent_region.radius - groove_depth
-        
-        axis = gp_Ax2(gp_Pnt(0, 0, zpos), gp_Dir(0, 0, 1))
-        outer = BRepPrimAPI_MakeCylinder(axis, parent_region.radius, groove_width).Shape()
-        inner = BRepPrimAPI_MakeCylinder(axis, new_radius, groove_width).Shape()
-        
-        cut_shape = BRepAlgoAPI_Cut(outer, inner).Shape()
-        self._cut_with_tracking(cut_shape, Labels.GROOVE)
-        
-        new_region = Region(
-            z_min=zpos,
-            z_max=zpos + groove_width,
-            radius=new_radius,
-            direction=parent_region.direction
-        )
-        
-        print(f"    Groove: z=[{zpos:.2f}, {zpos + groove_width:.2f}], r={new_radius:.2f}")
-        return new_region
-    
     def generate_from_tree(
         self, 
         tree_data: Dict, 
@@ -796,11 +521,17 @@ class TreeTurningGenerator:
         
         return self.shape
     
-    def _process_steps_only(self, node: TreeNode, parent_region: Region, direction: str = None):
+    def _process_steps_only(self, node: TreeNode, parent_region: Region, direction: str = None, _depth: int = 0):
         """
         Step 노드만 처리하여 모든 region 확정.
         Groove는 건너뛰고 나중에 별도 처리.
         """
+        if _depth > MAX_RECURSION_DEPTH:
+            raise RecursionError(
+                f"_process_steps_only: 최대 재귀 깊이({MAX_RECURSION_DEPTH}) 초과: "
+                f"node={node.label}(id={node.id})"
+            )
+        
         if node.label == 'b':
             # Base (Stock) 노드
             node.region = Region(
@@ -814,7 +545,7 @@ class TreeTurningGenerator:
             step_children = [c for c in node.children if c.label == 's']
             for i, child in enumerate(step_children):
                 child_dir = 'top' if i % 2 == 0 else 'bottom'
-                self._process_steps_only(child, node.region, child_dir)
+                self._process_steps_only(child, node.region, child_dir, _depth + 1)
             
             # Groove 자식의 region만 부모로 설정 (나중에 처리)
             groove_children = [c for c in node.children if c.label == 'g']
@@ -836,7 +567,7 @@ class TreeTurningGenerator:
             # Step 자식 재귀 처리
             step_children = [c for c in node.children if c.label == 's']
             for child in step_children:
-                self._process_steps_only(child, node.region, direction)
+                self._process_steps_only(child, node.region, direction, _depth + 1)
             
             # Groove 자식의 region만 부모로 설정 (나중에 처리)
             groove_children = [c for c in node.children if c.label == 'g']
@@ -845,15 +576,21 @@ class TreeTurningGenerator:
                 child.parent_node = node
                 self._assign_groove_regions(child)
     
-    def _assign_groove_regions(self, node: TreeNode):
+    def _assign_groove_regions(self, node: TreeNode, _depth: int = 0):
         """Groove 노드와 그 자식들에게 부모 region 할당 (나중 처리용)"""
+        if _depth > MAX_RECURSION_DEPTH:
+            raise RecursionError(
+                f"_assign_groove_regions: 최대 재귀 깊이({MAX_RECURSION_DEPTH}) 초과: "
+                f"node={node.label}(id={node.id})"
+            )
+        
         for child in node.children:
             if child.label == 'g':
                 child.region = node.region
                 child.parent_node = node
-                self._assign_groove_regions(child)
+                self._assign_groove_regions(child, _depth + 1)
     
-    def _process_grooves_only(self, node: TreeNode, parent_groove_region: Region = None) -> int:
+    def _process_grooves_only(self, node: TreeNode, parent_groove_region: Region = None, _depth: int = 0) -> int:
         """
         모든 Groove 노드 처리 (Step 처리 완료 후).
         DFS로 모든 노드 순회하며 Groove만 처리.
@@ -861,6 +598,12 @@ class TreeTurningGenerator:
         Returns:
             성공적으로 생성된 Groove 개수
         """
+        if _depth > MAX_RECURSION_DEPTH:
+            raise RecursionError(
+                f"_process_grooves_only: 최대 재귀 깊이({MAX_RECURSION_DEPTH}) 초과: "
+                f"node={node.label}(id={node.id})"
+            )
+        
         groove_count = 0
         
         if node.label == 'g':
@@ -891,16 +634,15 @@ class TreeTurningGenerator:
             # Groove 자식 처리 (중첩 Groove)
             for child in node.children:
                 if child.label == 'g':
-                    groove_count += self._process_grooves_only(child, node.region)
+                    groove_count += self._process_grooves_only(child, node.region, _depth + 1)
         else:
-            # Base나 Step인 경우, 자식들 중 Groove 처리
             for child in node.children:
                 if child.label == 'g':
-                    groove_count += self._process_grooves_only(child, node.region)
+                    groove_count += self._process_grooves_only(child, node.region, _depth + 1)
                 elif child.label == 's':
-                    groove_count += self._process_grooves_only(child, None)
+                    groove_count += self._process_grooves_only(child, None, _depth + 1)
                 elif child.label == 'b':
-                    groove_count += self._process_grooves_only(child, None)
+                    groove_count += self._process_grooves_only(child, None, _depth + 1)
         
         return groove_count
     
@@ -1029,16 +771,14 @@ class TreeTurningGenerator:
         
         return None
     
-    def _count_grooves_in_tree(self, node: TreeNode) -> int:
+    def _count_grooves_in_tree(self, node: TreeNode, _depth: int = 0) -> int:
         """트리에서 Groove 노드 개수 계산"""
+        if _depth > MAX_RECURSION_DEPTH:
+            raise RecursionError(
+                f"_count_grooves_in_tree: 최대 재귀 깊이({MAX_RECURSION_DEPTH}) 초과: "
+                f"node={node.label}(id={node.id})"
+            )
         count = 1 if node.label == 'g' else 0
         for child in node.children:
-            count += self._count_grooves_in_tree(child)
+            count += self._count_grooves_in_tree(child, _depth + 1)
         return count
-    
-    def save(self, filepath: str) -> bool:
-        """생성된 형상을 STEP 파일로 저장."""
-        if self.shape is None or self.shape.IsNull():
-            print("저장할 형상이 없습니다.")
-            return False
-        return save_step(self.shape, filepath)

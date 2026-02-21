@@ -20,11 +20,10 @@ from pathlib import Path
 from typing import List, Dict, Optional
 
 from pipeline import TurningMillingGenerator, TurningMillingParams
-from core import TurningParams, HoleParams
+from core import TurningParams, FeatureParams, generate_trees
 from utils import (
     save_step, load_trees, save_trees,
     classify_trees_by_step_count, get_tree_stats,
-    generate_trees,
     find_bidirectional_step_trees, find_sibling_groove_trees,
 )
 from viz import visualize_milling_process, visualize_trees
@@ -132,38 +131,25 @@ def run_generation_pipeline(
         generator = TurningMillingGenerator(params)
         
         try:
-            # 터닝 형상 생성
-            turning_shape = generator.turning_gen.generate_from_tree(tree, apply_edge_features=True)
-            
-            # 밀링 특징 추가
-            final_shape, placements = generator.milling_adder.add_milling_features(
-                turning_shape,
-                target_face_types=params.target_face_types,
-                max_total_holes=params.max_holes,
-                holes_per_face=params.holes_per_face
+            final_shape, placements = generator.generate_from_tree(
+                tree, apply_edge_features=True
             )
             
-            generator.shape = final_shape
-            generator.placements = placements
-            
             if final_shape and not final_shape.IsNull():
-                # STEP 저장
                 n_holes = len(placements)
                 step_filename = f"{model_name}_H{n_holes}.step"
                 step_filepath = step_dir / step_filename
                 save_step(final_shape, str(step_filepath))
                 
-                # 밀링 시각화 (viz 모듈 사용)
                 visualize_milling_process(
-                    turning_shape,
+                    generator.turning_gen.shape,
                     final_shape,
                     placements,
-                    params.hole,
+                    params.feature,
                     viz_dir,
                     model_name
                 )
                 
-                # 생성 정보
                 info = generator.get_generation_info()
                 info["tree_id"] = idx
                 info["model_name"] = model_name
@@ -173,7 +159,7 @@ def run_generation_pipeline(
                 info["canonical"] = stats['canonical']
                 generation_info.append(info)
                 
-                print(f"\n  완료: {n_holes}개 홀 추가됨")
+                print(f"\n  완료: {n_holes}개 피처 추가됨")
             else:
                 print(f"  모델 생성 실패")
                 
@@ -324,21 +310,20 @@ def main():
             fillet_range=(0.3, 0.8),
             edge_feature_prob=0.3,
         ),
-        hole=HoleParams(
-            diameter_min=1.0,            # 0.5 → 1.0: 최소 직경 증가
-            diameter_max_ratio=0.85,     # 0.6 → 0.85: 더 큰 피처 허용
-            clearance=0.15,              # 0.3 → 0.15: 경계 여유 감소
-            depth_ratio=2.0,             # 1.5 → 2.0: 더 깊은 포켓
-            min_spacing=1.0,             # 1.5 → 1.0: 간격 감소
-            max_features_per_face=3,     # 2 → 3: 면당 더 많은 피처
-            rect_aspect_min=0.4,         # 사각 피처 종횡비 범위 확대
+        feature=FeatureParams(
+            diameter_min=1.0,
+            diameter_max_ratio=0.85,
+            clearance=0.15,
+            depth_ratio=2.0,
+            min_spacing=1.0,
+            max_features_per_face=3,
+            rect_aspect_min=0.4,
             rect_aspect_max=2.5,
         ),
         enable_milling=True,
-        target_face_types=["Cylinder", "Cone"],  # 원추면도 포함
-        max_holes=8,                     # 3 → 8: 최대 피처 수 증가
-        holes_per_face=2,                # 1 → 2: 면당 피처 수 증가
-        hole_probability=1.0,
+        target_face_types=["Cylinder", "Cone"],
+        max_holes=8,
+        holes_per_face=2,
     )
     
     # 옵션 1: 기존 트리 파일 사용

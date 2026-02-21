@@ -12,9 +12,9 @@ from core.turning_generator import TreeTurningGenerator, TurningParams, TreeNode
 from core.face_analyzer import FaceAnalyzer, FaceDimensionResult
 from core.milling_adder import (
     MillingFeatureAdder, 
-    FeatureParams, HoleParams,  # HoleParams는 FeatureParams의 별칭
+    FeatureParams,
     ValidFaceInfo, 
-    FeaturePlacement, HolePlacement,  # HolePlacement는 FeaturePlacement의 별칭
+    FeaturePlacement,
     FeatureType,
     compute_hole_scale_range,
 )
@@ -25,8 +25,8 @@ __all__ = [
     'TreeGenerator', 'TreeGeneratorParams', 'generate_trees',
     'TreeTurningGenerator', 'TurningParams', 'TreeNode', 'Region',
     'FaceAnalyzer', 'FaceDimensionResult',
-    'MillingFeatureAdder', 'FeatureParams', 'HoleParams',
-    'ValidFaceInfo', 'FeaturePlacement', 'HolePlacement',
+    'MillingFeatureAdder', 'FeatureParams',
+    'ValidFaceInfo', 'FeaturePlacement',
     'FeatureType', 'compute_hole_scale_range',
     'DesignOperation', 'LabelMaker', 'Labels',
 ]

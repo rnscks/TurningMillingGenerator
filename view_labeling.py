@@ -1,10 +1,11 @@
 """
-Face 라벨링 테스트 스크립트
+Face 라벨링 시각화 스크립트
 
-여러 트리 모델을 생성하고, OCC Viewer 메뉴에서 모델을 전환하며 확인합니다.
+여러 트리 모델을 생성하고, OCC Viewer 메뉴에서 모델을 전환하며
+라벨별 색상을 확인합니다.
 
 사용법:
-    python test_labeling.py
+    python view_labeling.py
 """
 
 import random
@@ -16,10 +17,11 @@ from OCC.Core.Quantity import Quantity_Color, Quantity_TOC_RGB
 from OCC.Display.SimpleGui import init_display
 
 from pipeline import TurningMillingGenerator, TurningMillingParams
-from core import TurningParams, HoleParams
+from core import TurningParams, FeatureParams
 from core.label_maker import LabelMaker
 from utils import save_labeled_step
-from utils.tree_io import load_trees, get_tree_stats, generate_trees
+from core import generate_trees
+from utils.tree_io import load_trees, get_tree_stats
 from viz.label_viz import load_label_props, get_face_center
 
 
@@ -51,7 +53,7 @@ def build_params() -> TurningMillingParams:
             fillet_range=(0.3, 0.8),
             edge_feature_prob=0.3,
         ),
-        hole=HoleParams(
+        feature=FeatureParams(
             diameter_min=1.0,
             diameter_max_ratio=0.85,
             clearance=0.15,
@@ -65,7 +67,6 @@ def build_params() -> TurningMillingParams:
         target_face_types=["Cylinder", "Cone"],
         max_holes=4,
         holes_per_face=1,
-        hole_probability=1.0,
         enable_labeling=True,
     )
 

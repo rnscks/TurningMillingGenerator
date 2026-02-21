@@ -72,9 +72,6 @@ class FeatureParams:
     rect_aspect_max: float = 2.0        # 사각 피처 최대 종횡비
 
 
-# 하위 호환성을 위한 별칭
-HoleParams = FeatureParams
-
 
 @dataclass
 class ValidFaceInfo:
@@ -117,9 +114,6 @@ class FeaturePlacement:
     face_type: str = ""                 # 면 타입
     is_through: bool = False            # 관통 여부
 
-
-# 하위 호환성을 위한 별칭
-HolePlacement = FeaturePlacement
 
 
 # ============================================================================
@@ -364,17 +358,6 @@ def create_rectangular_passage(
 
 
 # ============================================================================
-# Legacy Function (하위 호환성)
-# ============================================================================
-
-def create_hole(shape: TopoDS_Shape, center: gp_Pnt, direction: gp_Dir,
-                diameter: float, depth: float) -> Optional[TopoDS_Shape]:
-    """형상에 홀 추가 (Boolean Cut) - 하위 호환성용."""
-    result, _ = create_blind_hole(shape, center, direction, diameter, depth)
-    return result
-
-
-# ============================================================================
 # MillingFeatureAdder Class
 # ============================================================================
 
@@ -590,7 +573,7 @@ class MillingFeatureAdder:
                 available_depth, self.params.through_extra
             )
             if new_shape:
-                label = Labels.RECTANGULAR_POCKET  # passage도 pocket 라벨 사용
+                label = Labels.RECTANGULAR_PASSAGE
                 placement = FeaturePlacement(
                     feature_type=feature_type,
                     center_3d=center,
@@ -674,16 +657,23 @@ class MillingFeatureAdder:
         
         current_shape = shape
         self.placements = []
+        face_usage_count: dict = {}
         
         for info in valid_faces:
             if len(self.placements) >= max_total_holes:
                 break
             
+            current_usage = face_usage_count.get(info.face_id, 0)
+            if current_usage >= self.params.max_features_per_face:
+                continue
+            
             for _ in range(holes_per_face):
                 if len(self.placements) >= max_total_holes:
                     break
                 
-                # 피처 타입 랜덤 선택
+                if face_usage_count.get(info.face_id, 0) >= self.params.max_features_per_face:
+                    break
+                
                 feature_type = random.choice(feature_types)
                 
                 current_shape, placement = self.add_feature_to_face(
@@ -692,6 +682,7 @@ class MillingFeatureAdder:
                 
                 if placement:
                     self.placements.append(placement)
+                    face_usage_count[info.face_id] = face_usage_count.get(info.face_id, 0) + 1
                     
                     # 로그 출력
                     if placement.diameter > 0:

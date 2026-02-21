@@ -11,7 +11,7 @@ from OCC.Core.TopoDS import TopoDS_Shape
 
 from core import (
     TreeTurningGenerator, TurningParams,
-    MillingFeatureAdder, HoleParams, HolePlacement
+    MillingFeatureAdder, FeatureParams, FeaturePlacement
 )
 from core.label_maker import LabelMaker, Labels
 from utils import save_step
@@ -25,14 +25,13 @@ from utils import save_step
 class TurningMillingParams:
     """전체 파이프라인 파라미터"""
     turning: TurningParams = None
-    hole: HoleParams = None
+    feature: FeatureParams = None
     
     # 밀링 설정
     enable_milling: bool = True
     target_face_types: List[str] = None
     max_holes: int = 5
     holes_per_face: int = 2
-    hole_probability: float = 0.8
     
     # 라벨링 설정
     enable_labeling: bool = False
@@ -40,8 +39,8 @@ class TurningMillingParams:
     def __post_init__(self):
         if self.turning is None:
             self.turning = TurningParams()
-        if self.hole is None:
-            self.hole = HoleParams()
+        if self.feature is None:
+            self.feature = FeatureParams()
         if self.target_face_types is None:
             self.target_face_types = ["Plane", "Cylinder"]
 
@@ -56,17 +55,17 @@ class TurningMillingGenerator:
     def __init__(self, params: TurningMillingParams = None):
         self.params = params or TurningMillingParams()
         self.turning_gen = TreeTurningGenerator(self.params.turning)
-        self.milling_adder = MillingFeatureAdder(self.params.hole)
+        self.milling_adder = MillingFeatureAdder(self.params.feature)
         
         self.shape: Optional[TopoDS_Shape] = None
-        self.placements: List[HolePlacement] = []
+        self.placements: List[FeaturePlacement] = []
         self.label_maker: Optional[LabelMaker] = None
     
     def generate_from_tree(
         self,
         tree: Dict,
         apply_edge_features: bool = True
-    ) -> Tuple[TopoDS_Shape, List[HolePlacement]]:
+    ) -> Tuple[TopoDS_Shape, List[FeaturePlacement]]:
         """
         트리 구조에서 터닝+밀링 형상 생성.
         
@@ -132,8 +131,3 @@ class TurningMillingGenerator:
         }
 
 
-# ============================================================================
-# 트리 데이터 유틸리티 (utils.tree_io에서 re-export)
-# ============================================================================
-
-from utils.tree_io import load_trees, classify_trees_by_step_count

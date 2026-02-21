@@ -26,10 +26,12 @@ class Labels:
     BLIND_HOLE = 5
     THROUGH_HOLE = 6
     RECTANGULAR_POCKET = 7
+    RECTANGULAR_PASSAGE = 8
     
     NAMES = [
         "stock", "step", "groove", "chamfer", "fillet",
-        "blind_hole", "through_hole", "rectangular_pocket"
+        "blind_hole", "through_hole", "rectangular_pocket",
+        "rectangular_passage"
     ]
 
 

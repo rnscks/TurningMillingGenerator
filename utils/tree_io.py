@@ -9,11 +9,10 @@
 기능:
 - 트리 데이터 로드/저장
 - 트리 분류 및 필터링
-- 트리 생성 (core.tree_generator에서 re-export)
 """
 
 import json
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 from pathlib import Path
 
 
@@ -222,73 +221,3 @@ def filter_trees(
     
     return result
 
-
-# ============================================================================
-# 트리 생성 (core.tree_generator에서 re-export)
-# ============================================================================
-
-def generate_trees(
-    n_nodes: int = 6,
-    max_depth: int = 3,
-    labels: List[str] = None,
-    save_path: str = None
-) -> List[Dict]:
-    """
-    트리 구조 생성 및 저장.
-    
-    Args:
-        n_nodes: 총 노드 수
-        max_depth: 최대 깊이
-        labels: 사용할 라벨 리스트 (기본: ['s', 'g'])
-        save_path: 저장할 JSON 파일 경로 (None이면 저장 안함)
-        
-    Returns:
-        생성된 트리 딕셔너리 리스트
-    """
-    from core.tree_generator import TreeGenerator, TreeGeneratorParams
-    
-    params = TreeGeneratorParams(
-        n_nodes=n_nodes,
-        max_depth=max_depth,
-        labels=labels or ['s', 'g']
-    )
-    generator = TreeGenerator(params)
-    trees = generator.generate_all_trees()
-    
-    if save_path:
-        save_trees(trees, save_path)
-        print(f"  {len(trees)}개 트리 생성됨, 저장: {save_path}")
-    else:
-        print(f"  {len(trees)}개 트리 생성됨")
-    
-    return trees
-
-
-def generate_and_save_trees(
-    n_nodes: int = 6,
-    max_depth: int = 3,
-    output_dir: str = "results",
-    filename: str = None
-) -> Tuple[List[Dict], str]:
-    """
-    트리 생성 후 결과 디렉토리에 저장.
-    
-    Args:
-        n_nodes: 총 노드 수
-        max_depth: 최대 깊이
-        output_dir: 출력 디렉토리
-        filename: 파일명 (기본: trees_N{n}_H{h}.json)
-        
-    Returns:
-        (생성된 트리 리스트, 저장된 파일 경로)
-    """
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
-    
-    if filename is None:
-        filename = f"trees_N{n_nodes}_H{max_depth}.json"
-    
-    save_path = output_path / filename
-    trees = generate_trees(n_nodes, max_depth, save_path=str(save_path))
-    
-    return trees, str(save_path)
