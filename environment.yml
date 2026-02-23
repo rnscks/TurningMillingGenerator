@@ -1,0 +1,13 @@
+name: occ
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pythonocc-core>=7.7.2
+  - numpy>=1.24
+  - matplotlib>=3.7
+  - pip
+  - pip:
+      - pyvista>=0.43
+      - pytest>=7.0

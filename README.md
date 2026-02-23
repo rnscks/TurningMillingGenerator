@@ -8,8 +8,6 @@
 
 ---
 
-<!-- TODO: Replace with a composite overview image (labeled shape grid + tree structure) -->
-<!-- Suggested: combine results/trees/trees_grid.png + a few results/visualization/*/final_shape.png -->
 ![Overview](doc/images/overview_milling_turning.png)
 
 </div>
@@ -37,12 +35,6 @@
 Recent B-rep learning models such as **UV-Net** [[Jayaraman et al., CVPR 2021](#references)] demonstrate that neural networks operating directly on Boundary Representation (B-rep) data can outperform point cloud, voxel, and mesh-based approaches on 3D CAD tasks. For the **machining feature segmentation** task specifically — classifying each B-rep face as a turning or milling feature — the community relies on synthetic datasets like **MFCAD** and **MFCAD++** [[Colligan et al., CAD 2022](#references)], where labeled STEP files are generated programmatically using OpenCASCADE.
 
 **TurningMillingGenerator** is a dataset generation engine built for this problem. It synthesizes turning-milling part geometries with automatically assigned per-face semantic labels, producing STEP files that can be fed directly into the UV-Net processing pipeline.
-
-### Problem & Solution
-
-Training deep learning models for **CNC machining feature recognition** requires large, accurately labeled 3D datasets. Manual annotation is expensive, inconsistent, and difficult to scale.
-
-**TurningMillingGenerator** solves this by procedurally synthesizing turning-milling part geometries from a formal tree grammar, then automatically assigning semantic labels to every face using OpenCASCADE's Boolean operation history.
 
 ### Why This Approach
 
@@ -131,11 +123,57 @@ The Bottom-Up strategy reverses this:
 
 ---
 
+### Tree Grammar & Topology Enumeration
+
+The tree grammar uses three node types to encode all valid CNC turning topologies:
+
+| Node | Symbol | Meaning | Constraints |
+|------|--------|---------|-------------|
+| Base | `b` | Root — cylindrical stock | Always exactly 1, at root |
+| Step | `s` | 단차 (diameter reduction) | Base→Step ≤ 2, Step→Step ≤ 1 |
+| Groove | `g` | 홈 (circumferential groove) | Groove→Step forbidden |
+
+The `Groove → Step` constraint reflects a physical machining reality: a groove is too narrow (1.5–3 mm) to fit a step height (2–4 mm) inside it.
+
+All unique tree structures within given node count `N` and depth `H` are **exhaustively enumerated** and deduplicated via a canonical string form (e.g. `b(s,s(g))`). The `generate_balanced_sample()` method then draws a diversity-weighted subset, ensuring different step/groove count ratios are represented.
+
+![Tree Grid](results/trees/trees_grid.png)
+
+*All valid topologies for N=6, H=4 — each cell shows the canonical form and tree diagram.*
+
+---
+
+### Milling Feature Placement
+
+After the turning shape is generated, the `MillingFeatureAdder` scans every B-rep face to find **valid placement targets**:
+
+```
+① FaceAnalyzer inspects each face
+   └─ surface type: Cylinder / Plane / Cone
+   └─ dimensions: width (W), height (H) extracted from bounding geometry
+
+② Validity filter
+   └─ feature scale ≤ min(W, H) − 2 × clearance
+   └─ only lateral surfaces accepted (top/bottom planes excluded)
+
+③ Feature placement
+   └─ center sampled on the valid face
+   └─ direction set normal to the surface
+   └─ min_spacing enforced between features on the same face
+   └─ face_usage_count tracked → max_features_per_face respected
+```
+
+The image below shows valid faces (highlighted) detected on the turning shape before each milling feature is added:
+
+![Valid Faces](results/visualization/model_N6_S0_G5_030/feature_01_valid_faces.png)
+
+*Highlighted faces are candidates for the next milling feature placement.*
+
+---
+
 ## Generated Results
 
-<!-- TODO: Insert a composite image of multiple final_shape.png views -->
-<!-- Recommended layout: 3×3 grid of models with different canonical forms -->
-![Generated Shapes](doc/images/generated_shapes.png)
+![Generated Shapes](doc/images/results_milling_turning.png)
 
 Each model is named by its topology: `model_N{nodes}_S{steps}_G{grooves}_{id}`.
 
@@ -147,9 +185,6 @@ Each model is named by its topology: `model_N{nodes}_S{steps}_G{grooves}_{id}`.
 | `b(s(s(s(g,g))))` | 3 | 2 | Step chain terminating in sibling grooves |
 | `b(g(g(g(g,g))))` | 0 | 5 | Pure groove nesting |
 | `b(s(g(g(g,g))))` | 1 | 4 | Mixed step-groove hierarchy |
-
-<!-- TODO: Add a labeled view (color-coded faces) from view_labeling.py output -->
-![Labeled View](doc/images/labeled_view.png)
 
 ---
 
@@ -176,42 +211,80 @@ Labels are assigned per-face using OpenCASCADE's Boolean operation history:
 
 ## Getting Started
 
-### Prerequisites
+### Requirements
 
-| Dependency | Version | Notes |
-|-----------|---------|-------|
-| Python | 3.9 – 3.11 | 3.12+ not yet supported by pythonocc-core |
-| pythonocc-core | 7.7.x | OpenCASCADE Python bindings |
-| numpy | ≥ 1.24 | |
-| matplotlib | ≥ 3.7 | Tree and milling visualization |
-| pyvista | ≥ 0.43 | 3D visualization (optional) |
+| Dependency | Version | Role |
+|-----------|---------|------|
+| Python | 3.10 – 3.12 | Recommended range; 3.11 tested |
+| pythonocc-core | ≥ 7.7.2 | OpenCASCADE Python bindings (core geometry engine) |
+| numpy | ≥ 1.24 | Numerical operations |
+| matplotlib | ≥ 3.7 | Tree and milling process visualization |
+| pyvista | ≥ 0.43 | 3D interactive viewer (optional) |
 
-### Installation
+> **Note on pythonocc-core:** Native C++ bindings make conda the most reliable install path.  
+> pip install also works, but may require a pre-built wheel matching your OS and Python version.
 
-**Recommended — conda (avoids native library conflicts):**
+---
 
-```bash
-conda create -n occ python=3.11
-conda activate occ
-conda install -c conda-forge pythonocc-core numpy matplotlib
-pip install pyvista
-```
-
-**Alternative — pip only:**
-
-```bash
-pip install pythonocc-core numpy matplotlib pyvista
-```
-
-### Clone & Run
+### Step 1 — Clone the repository
 
 ```bash
 git clone https://github.com/<your-username>/TurningMillingGenerator.git
 cd TurningMillingGenerator
+```
 
-# Generate trees and 3D models (results saved to results/)
+---
+
+### Step 2 — Set up the environment
+
+**Option A: conda (recommended)**
+
+Uses `environment.yml` included in the repo — one command sets up everything:
+
+```bash
+conda env create -f environment.yml
+conda activate occ
+```
+
+**Option B: pip**
+
+```bash
+python -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+
+# macOS / Linux
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+---
+
+### Step 3 — Verify the installation
+
+```bash
+python -c "from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeCylinder; print('pythonocc-core OK')"
+```
+
+Expected output:
+```
+pythonocc-core OK
+```
+
+> If you see a `SWIG DeprecationWarning`, that is a known cosmetic issue in the OpenCASCADE bindings and can be safely ignored.
+
+---
+
+### Step 4 — Run the pipeline
+
+```bash
+# Full pipeline: generate trees → 3D shapes → save STEP + JSON + images
 python run_pipeline.py
 ```
+
+Results are saved to `results/`. See [Output Structure](#output-structure) for details.
 
 ---
 
@@ -256,7 +329,7 @@ print(f"Stock: R={info['stock_radius']:.1f}mm, H={info['stock_height']:.1f}mm")
 print(f"Milling features placed: {info['n_holes']}")
 ```
 
-### Output Structure
+### Output Structure <a name="output-structure"></a>
 
 Running `run_pipeline.py` produces:
 
@@ -309,41 +382,11 @@ TurningMillingGenerator/
 ├── tests/                      170 test cases across 8 modules
 ├── results/                    Generated outputs (STEP, JSON, images)
 ├── doc/                        Architecture specs and refactoring notes
+├── environment.yml             conda environment definition (recommended)
+├── requirements.txt            pip dependency list
 ├── pipeline.py                 TurningMillingGenerator entry point
 └── run_pipeline.py             Full pipeline execution script
 ```
-
----
-
-## Refactoring Highlights
-
-This project underwent two structured refactoring rounds, documented in [`doc/refactoring/refactoring_plan.md`](doc/refactoring/refactoring_plan.md).
-
-### Round 1 — Architecture & Bug Fixes
-
-| Item | Problem | Fix |
-|------|---------|-----|
-| **Layer inversion** | `utils/` imported from `core/`; pipeline bypassed by `run_pipeline.py` | Enforced strict Application → Domain → Infrastructure dependency |
-| **Dead code** | 6 legacy methods referenced non-existent fields (`AttributeError` on call) | Removed; `turning_generator.py` shrunk by 260 lines |
-| **Null propagation** | `BRepAlgoAPI_Cut` result used without null check | Added `IsNull()` guard; raises `RuntimeError` on failure |
-| **Missing label** | `RECTANGULAR_PASSAGE` reused pocket label (indistinguishable in training data) | Added label ID 8 across label constants, name list, and color config |
-| **Unbounded recursion** | 5 recursive functions had no depth limit | Added `MAX_RECURSION_DEPTH = 50` guard |
-| **Duplicate milling** | Same face could exceed `max_features_per_face` after Boolean Cut | Added `face_usage_count` dict; dual protection with `min_spacing` |
-
-### Round 2 — Test Coverage
-
-| Module | Test Cases |
-|--------|-----------|
-| `design_operation.py` | 16 |
-| `label_maker.py` | 15 |
-| `milling_adder.py` | 17 |
-| `face_analyzer.py` | 17 |
-| `tree_io.py` | 22 |
-| `pipeline.py` (integration) | 11 |
-| Pre-existing (`tree_generator`, `turning_generator`) | 72 |
-| **Total** | **170 passed** |
-
----
 
 ---
 
@@ -364,28 +407,6 @@ Andrew Colligan, Trevor T. Robinson, Declan C. Nolan, Yang Hua, Weijuan Cao
 [[Paper]](https://www.sciencedirect.com/science/article/pii/S0010448522000240) · [[Dataset (MFCAD++)]](https://pure.qub.ac.uk/en/datasets/mfcad-dataset-dataset-for-paper-hierarchical-cadnet-learning-from/)
 
 > Extends B-rep learning with a hierarchical graph representation for machining feature recognition. Introduces **MFCAD++** (59,665 samples), a synthetic dataset generated using PythonOCC and saved as STEP files with per-face labels — the same methodology used in this project.
-
-```bibtex
-@InProceedings{Jayaraman_2021_CVPR,
-  author    = {Jayaraman, Pradeep Kumar and Sanghi, Aditya and Lambourne, Joseph G. and
-               Willis, Karl D.D. and Davies, Thomas and Shayani, Hooman and Morris, Nigel},
-  title     = {UV-Net: Learning From Boundary Representations},
-  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-  month     = {June},
-  year      = {2021},
-  pages     = {11703-11712}
-}
-
-@article{Colligan2022,
-  author  = {Colligan, Andrew and Robinson, Trevor T. and Nolan, Declan C. and
-             Hua, Yang and Cao, Weijuan},
-  title   = {Hierarchical {CADNet}: Learning from {B-Reps} for Machining Feature Recognition},
-  journal = {Computer-Aided Design},
-  volume  = {147},
-  year    = {2022},
-  doi     = {10.1016/j.cad.2022.103226}
-}
-```
 
 ---
 
