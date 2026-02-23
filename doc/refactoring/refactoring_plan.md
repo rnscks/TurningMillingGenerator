@@ -2,7 +2,7 @@
 
 ---
 
-## 2025-02-21 — 1차 리팩토링
+## 2025-02-21 — 1차: Dead Code 제거, 버그 수정, 아키텍처 정리
 
 ### 배경
 
@@ -223,9 +223,163 @@ Infrastructure (utils/) ← core에서 임포트하지 않음
 
 | 우선순위 | 항목 | 설명 |
 |---------|------|------|
-| 1 | `design_operation.py` 테스트 작성 | Face History 추적 검증 |
-| 1 | `label_maker.py` 테스트 작성 | 라벨 전파 규칙 검증 |
-| 2 | `milling_adder.py` 테스트 작성 | 피처 스케일 계산, 배치 로직 검증 |
-| 2 | `face_analyzer.py` 테스트 작성 | 면 치수 분석 검증 |
-| 3 | `pipeline.py` 통합 테스트 | 전체 파이프라인 E2E 검증 |
-| 3 | `utils/tree_io.py` 테스트 작성 | I/O, 분류/필터 검증 |
+| ~~1~~ | ~~`design_operation.py` 테스트 작성~~ | → 2025-02-21 2차 리팩토링에서 완료 |
+| ~~1~~ | ~~`label_maker.py` 테스트 작성~~ | → 2025-02-21 2차 리팩토링에서 완료 |
+| ~~2~~ | ~~`milling_adder.py` 테스트 작성~~ | → 2025-02-21 2차 리팩토링에서 완료 |
+| ~~2~~ | ~~`face_analyzer.py` 테스트 작성~~ | → 2025-02-21 2차 리팩토링에서 완료 |
+| ~~3~~ | ~~`pipeline.py` 통합 테스트~~ | → 2025-02-21 2차 리팩토링에서 완료 |
+| ~~3~~ | ~~`utils/tree_io.py` 테스트 작성~~ | → 2025-02-21 2차 리팩토링에서 완료 |
+
+---
+
+## 2025-02-21 — 2차: 미테스트 모듈 6개 테스트 작성 (98 케이스)
+
+### 배경
+
+1차 리팩토링 후 핵심 모듈 6개에 테스트가 없는 상태.
+버그 재발 방지 및 향후 변경 시 회귀 검증을 위해 테스트 작성.
+
+---
+
+### 항목 1. `design_operation.py` 테스트 (1순위)
+
+**왜:** Face History 추적 (Modified/Generated/Deleted)은 라벨링 시스템의 기반.
+이 로직에 버그가 있으면 모든 라벨이 틀어짐.
+
+**무엇을:** `tests/test_design_operation.py` 신규 작성
+
+**어떻게:**
+- `collect_faces`: 원기둥 3면, 박스 6면 검증
+- `search_same_face`: 동일 shape 내 검색, 다른 shape 미검색
+- `DesignOperation.cut()`: 결과 유효성, origin_faces 기록, processed/generated/modified 추적 완전성
+- `DesignOperation.chamfer()/fillet()`: 결과 유효성, 새 면 생성, 추적 완전성
+- 실패 케이스: 교차하지 않는 도구로 Cut
+
+**결과:** 16개 테스트 케이스
+
+---
+
+### 항목 2. `label_maker.py` 테스트 (1순위)
+
+**왜:** 라벨 전파 규칙(Modified→원본 유지, Generated→신규 부여)이 핵심 도메인 로직.
+상수 정합성(Labels ↔ LABEL_PROPS.json)도 검증 필요.
+
+**무엇을:** `tests/test_label_maker.py` 신규 작성
+
+**어떻게:**
+- `Labels`: ID 순차성, NAMES 인덱스 일치 (9개 라벨 전수 검증)
+- `LabelMaker.initialize()`: 전체 face 라벨링, 기본값, 커스텀 라벨
+- `LabelMaker.update_label()`: Generated 면 새 라벨, Modified 면 원본 유지, 총 face 수 일치
+- 연속 연산: Step → Hole 순차 적용 시 라벨 누적 및 Step 라벨 보존
+- 엣지 케이스: 빈 상태, 재초기화, 범위 외 라벨 ID
+
+**결과:** 15개 테스트 케이스
+
+---
+
+### 항목 3. `milling_adder.py` 테스트 (2순위)
+
+**왜:** 피처 스케일 계산, 유효 면 판단, 4종 피처 생성이 모두 검증 필요.
+
+**무엇을:** `tests/test_milling_adder.py` 신규 작성
+
+**어떻게:**
+- `compute_hole_scale_range()`: 유효 범위, None/0 입력, clearance 초과, min > max 케이스
+- 피처 생성 함수 4종: `create_blind_hole`, `create_through_hole`, `create_rectangular_pocket`, `create_rectangular_passage` 각각 결과 유효성
+- `MillingFeatureAdder`: 면 분석, Plane 필터링, 피처 추가, max_total_holes 준수, feature_types 필터, 유효 면 없는 경우
+
+**결과:** 17개 테스트 케이스
+
+---
+
+### 항목 4. `face_analyzer.py` 테스트 (2순위)
+
+**왜:** 면 치수 계산이 밀링 피처 배치의 입력. 잘못되면 피처 크기/위치 전체에 영향.
+
+**무엇을:** `tests/test_face_analyzer.py` 신규 작성
+
+**어떻게:**
+- `get_surface_type()`: Cylinder/Plane/Cone 타입 분류
+- `is_z_aligned_plane()`: 상하면 검출, 측면 비검출
+- `FaceAnalyzer.analyze_shape()`: 원기둥(3면), 치수값(width≈2R, height≈H), 원추, Step 형상, Ring 감지
+- `FaceAnalyzer.get_valid_faces()`: 최소 치수 필터, 타입 필터
+- 포인트 유틸리티: `sample_edge_points` 개수, `points_to_rz` 변환, `analyze_rz_points` 빈 입력
+
+**결과:** 17개 테스트 케이스
+
+---
+
+### 항목 5. `utils/tree_io.py` 테스트 (3순위)
+
+**왜:** 트리 I/O와 분류/필터 함수는 파이프라인 입력 단계. OCC 의존 없는 순수 Python 테스트.
+
+**무엇을:** `tests/test_tree_io.py` 신규 작성
+
+**어떻게:**
+- `save_trees`/`load_trees`: 라운드트립, 부모 디렉토리 자동 생성, dict/list 형식 로드, 미존재 파일, 잘못된 형식
+- `classify_trees_by_step/groove_count`: 분류 결과, 빈 리스트, 인덱스 유효성, 전수 분류
+- `get_tree_stats`: 기본 통계, 양방향 Step 감지, 형제 Groove 감지, 중첩 Groove 비형제 판별
+- `find_bidirectional_step_trees`, `find_sibling_groove_trees`: 탐색 결과
+- `filter_trees`: 단일 조건, 복합 조건, 무조건 전체 반환, 불가능 조건
+
+**결과:** 22개 테스트 케이스
+
+---
+
+### 항목 6. `pipeline.py` 통합 테스트 (3순위)
+
+**왜:** 전체 파이프라인(트리→터닝→밀링→라벨링) 흐름이 정상 동작하는지 E2E 검증.
+
+**무엇을:** `tests/test_pipeline.py` 신규 작성
+
+**어떻게:**
+- `TurningMillingParams`: 기본값, 커스텀 설정
+- 기본 동작: 터닝 전용, 밀링 포함, 여러 트리 성공률
+- 라벨링: 활성/비활성 시 label_maker 상태, stock 라벨 존재, 밀링 피처 라벨 추가
+- `get_generation_info()`: 필드 존재, 피처 정보 구조
+
+**결과:** 11개 테스트 케이스
+
+---
+
+### 변경 파일 요약
+
+| 파일 | 신규 | 테스트 수 |
+|------|------|----------|
+| `tests/test_design_operation.py` | O | 16 |
+| `tests/test_label_maker.py` | O | 15 |
+| `tests/test_milling_adder.py` | O | 17 |
+| `tests/test_face_analyzer.py` | O | 17 |
+| `tests/test_tree_io.py` | O | 22 |
+| `tests/test_pipeline.py` | O | 11 |
+| **합계** | | **98** |
+
+기존 테스트 2개 (`test_tree_generator.py`, `test_turning_generator.py`) 포함 총 8개 테스트 파일.
+
+### 검증 결과
+
+```
+pytest tests/ -v
+======= 170 passed, 285 warnings in 4.40s =======
+```
+
+- 170개 전체 PASSED
+- warnings는 pythonocc-core SWIG 바인딩의 `DeprecationWarning` (우리 코드 무관)
+
+---
+
+## 리팩토링 현황 요약
+
+### 완료된 항목
+
+| 날짜 | 차수 | 내용 | 상태 |
+|------|------|------|------|
+| 2025-02-21 | 1차 | Dead Code 제거, 버그 수정, 미사용 정리, 라벨 추가, 재귀 안전장치, 중복 방지, 파일명 정리, 아키텍처 정리 (8개 항목) | 완료 |
+| 2025-02-21 | 2차 | 미테스트 모듈 6개 테스트 작성 (98 케이스) | 완료 (170 passed) |
+
+### 남은 항목
+
+| 우선순위 | 항목 | 설명 |
+|---------|------|------|
+| 낮음 | `pytest.ini` 추가 | SWIG DeprecationWarning 필터링, 테스트 기본 옵션 설정 |
+| 낮음 | 의존성 관리 파일 추가 | `requirements.txt` 또는 `pyproject.toml` (pythonocc-core, numpy, matplotlib, pyvista 등) |

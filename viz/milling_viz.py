@@ -20,8 +20,8 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Extend.TopologyUtils import TopologyExplorer
 
 from core import (
-    FaceAnalyzer, FeaturePlacement, HolePlacement, 
-    FaceDimensionResult, FeatureParams, HoleParams, FeatureType
+    FaceAnalyzer, FeaturePlacement,
+    FaceDimensionResult, FeatureParams, FeatureType
 )
 from core.milling_adder import compute_hole_scale_range
 
@@ -211,7 +211,7 @@ def shape_to_pyvista(shape: TopoDS_Shape, mesh_quality: float = 0.1) -> Optional
 # 면 분석 (시각화용)
 # ============================================================================
 
-def analyze_faces_for_visualization(shape: TopoDS_Shape, params: HoleParams) -> List[FaceAnalysisData]:
+def analyze_faces_for_visualization(shape: TopoDS_Shape, params: FeatureParams) -> List[FaceAnalysisData]:
     """형상의 모든 면을 분석하여 시각화용 데이터 생성."""
     mesh_tool = BRepMesh_IncrementalMesh(shape, 0.1, False, 0.5, True)
     mesh_tool.Perform()
@@ -260,9 +260,9 @@ def analyze_faces_for_visualization(shape: TopoDS_Shape, params: HoleParams) -> 
 def visualize_hole_valid_faces_and_placement(
     shape: TopoDS_Shape,
     analysis_results: List[FaceAnalysisData],
-    placement: HolePlacement,
+    placement: FeaturePlacement,
     hole_idx: int,
-    prev_placements: List[HolePlacement],
+    prev_placements: List[FeaturePlacement],
     output_path: Path
 ):
     """
