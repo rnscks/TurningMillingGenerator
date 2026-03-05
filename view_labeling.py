@@ -17,11 +17,11 @@ from OCC.Core.Quantity import Quantity_Color, Quantity_TOC_RGB
 from OCC.Display.SimpleGui import init_display
 
 from pipeline import TurningMillingGenerator, TurningMillingParams
-from core import TurningParams, FeatureParams
+from core import TurningParams, MillingParams
 from core.label_maker import LabelMaker
-from utils import save_labeled_step
+from core import save_labeled_step
 from core import generate_trees
-from utils.tree_io import load_trees, get_tree_stats
+from core.tree.io import load_trees, get_tree_stats
 from viz.label_viz import load_label_props, get_face_center
 
 
@@ -48,12 +48,12 @@ def build_params() -> TurningMillingParams:
             step_margin=0.5,
             groove_depth_range=(0.4, 0.8),
             groove_width_range=(1.5, 3.0),
-            groove_margin_ratio=0.15,
+            groove_margin=0.5,
             chamfer_range=(0.3, 0.8),
             fillet_range=(0.3, 0.8),
             edge_feature_prob=0.3,
         ),
-        feature=FeatureParams(
+        milling=MillingParams(
             diameter_min=1.0,
             diameter_max_ratio=0.85,
             clearance=0.15,
@@ -65,8 +65,8 @@ def build_params() -> TurningMillingParams:
         ),
         enable_milling=True,
         target_face_types=["Cylinder", "Cone"],
-        max_holes=4,
-        holes_per_face=1,
+        max_features=4,
+        features_per_face=1,
         enable_labeling=True,
     )
 
@@ -110,7 +110,7 @@ def generate_models(trees: List[Dict], selected: List[Tuple[int, Dict]]) -> List
         generator = TurningMillingGenerator(params)
         
         try:
-            shape, placements = generator.generate_from_tree(tree, apply_edge_features=True)
+            shape, placements = generator.generate_from_tree(tree, apply_edge_feats=True)
             
             if generator.label_maker and generator.label_maker.get_total_faces() > 0:
                 lm = generator.label_maker

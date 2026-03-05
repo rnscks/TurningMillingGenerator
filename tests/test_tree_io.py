@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.tree_io import (
+from core.tree.io import (
     load_trees, save_trees,
     classify_trees_by_step_count, classify_trees_by_groove_count,
     get_tree_stats, filter_trees,

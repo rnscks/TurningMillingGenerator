@@ -1,0 +1,18 @@
+{
+  "_comment": "UVNet Multi-task 학습 하이퍼파라미터",
+  "data_dir": "data/graphs",
+  "log_dir": "data/logs",
+  "ckpt_dir": "data/checkpoints",
+  "gnn": "gat",
+  "hidden": 64,
+  "num_uv": 10,
+  "dropout": 0.0,
+  "epochs": 100,
+  "batch_size": 8,
+  "lr": 0.001,
+  "alpha": 1.0,
+  "beta": 1.0,
+  "train_ratio": 0.8,
+  "val_ratio": 0.1,
+  "seed": 42
+}

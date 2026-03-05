@@ -20,10 +20,13 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Extend.TopologyUtils import TopologyExplorer
 
 from core import (
-    FaceAnalyzer, FeaturePlacement,
-    FaceDimensionResult, FeatureParams, FeatureType
+    FaceAnalyzer, FaceDimensionResult,
+    MillingParams, MillingFeatureRequest, compute_hole_scale_range,
 )
-from core.milling_adder import compute_hole_scale_range
+
+FeaturePlacement = MillingFeatureRequest
+FeatureParams = MillingParams
+FeatureType = None
 
 
 # ============================================================================
@@ -50,7 +53,7 @@ def create_feature_mesh(placement: FeaturePlacement) -> Optional[pv.PolyData]:
     
     feature_type = placement.feature_type
     
-    if feature_type in [FeatureType.BLIND_HOLE, FeatureType.THROUGH_HOLE]:
+    if feature_type in ('blind_hole', 'through_hole'):
         # 홀: 원기둥
         return pv.Cylinder(
             center=center + direction * placement.depth / 2,
@@ -58,7 +61,7 @@ def create_feature_mesh(placement: FeaturePlacement) -> Optional[pv.PolyData]:
             radius=placement.diameter / 2,
             height=placement.depth
         )
-    elif feature_type in [FeatureType.RECTANGULAR_POCKET, FeatureType.RECTANGULAR_PASSAGE]:
+    elif feature_type in ('rect_pocket', 'rect_passage'):
         # 사각 피처: 박스
         # 실제 모델 생성 코드(create_rectangular_pocket)와 동일한 좌표계 계산
         
@@ -119,11 +122,11 @@ def get_feature_label(placement: FeaturePlacement, idx: int) -> str:
     """피처 라벨 생성."""
     feature_type = placement.feature_type
     
-    if feature_type in [FeatureType.BLIND_HOLE, FeatureType.THROUGH_HOLE]:
-        type_name = "H" if feature_type == FeatureType.BLIND_HOLE else "TH"
+    if feature_type in ('blind_hole', 'through_hole'):
+        type_name = "H" if feature_type == 'blind_hole' else "TH"
         return f"{type_name}{idx+1}\nD={placement.diameter:.2f}mm\nd={placement.depth:.2f}mm"
     else:
-        type_name = "P" if feature_type == FeatureType.RECTANGULAR_POCKET else "PS"
+        type_name = "P" if feature_type == 'rect_pocket' else "PS"
         return f"{type_name}{idx+1}\n{placement.width:.1f}x{placement.length:.1f}mm\nd={placement.depth:.2f}mm"
 
 

@@ -1,17 +1,21 @@
 """
-터닝-밀링 파이프라인 실행 스크립트
+터닝·밀링 형상 STEP 파일 생성 스크립트
 
-전체 워크플로우:
-1. 트리 구조 생성 (또는 로드)
-2. 트리 시각화
-3. 터닝+밀링 형상 생성
-4. 결과 저장 (STEP, 시각화 이미지, 생성 정보 JSON)
+트리 구조를 기반으로 터닝·밀링 복합 형상을 합성하고
+STEP 파일과 시각화 이미지를 results/ 폴더에 저장합니다.
+형상 검토, 품질 확인, 시각적 검증 용도로 사용합니다.
 
-모든 결과를 results/ 폴더에 저장:
-- results/trees/          : 트리 구조 JSON 및 시각화
-- results/step/           : 생성된 STEP 파일
-- results/visualization/  : 밀링 시각화 이미지
-- results/generation_info.json : 생성 정보
+저장 결과
+---------
+  results/trees/               트리 구조 JSON 및 시각화
+  results/step/                생성된 STEP 파일 (라벨 없음)
+  results/visualization/       밀링 배치 시각화 이미지
+  results/generation_info.json 생성 메타데이터 (형상별 피처 정보)
+
+주의
+----
+이 스크립트는 STEP 형상 파일만 저장합니다 (라벨 없음).
+UVNet 학습용 데이터(.pt)는 generate_dataset.py 에서 생성합니다.
 """
 
 import json
@@ -20,8 +24,8 @@ from pathlib import Path
 from typing import List, Dict, Optional
 
 from pipeline import TurningMillingGenerator, TurningMillingParams
-from core import TurningParams, FeatureParams, generate_trees
-from utils import (
+from core import TurningParams, MillingParams, generate_trees
+from core import (
     save_step, load_trees, save_trees,
     classify_trees_by_step_count, get_tree_stats,
     find_bidirectional_step_trees, find_sibling_groove_trees,
@@ -132,7 +136,7 @@ def run_generation_pipeline(
         
         try:
             final_shape, placements = generator.generate_from_tree(
-                tree, apply_edge_features=True
+                tree, apply_edge_feats=True
             )
             
             if final_shape and not final_shape.IsNull():
@@ -142,14 +146,14 @@ def run_generation_pipeline(
                 save_step(final_shape, str(step_filepath))
                 
                 visualize_milling_process(
-                    generator.turning_gen.shape,
+                    final_shape,
                     final_shape,
                     placements,
-                    params.feature,
+                    params.milling,
                     viz_dir,
                     model_name
                 )
-                
+
                 info = generator.get_generation_info()
                 info["tree_id"] = idx
                 info["model_name"] = model_name
@@ -158,7 +162,7 @@ def run_generation_pipeline(
                 info["g_count"] = stats['g_count']
                 info["canonical"] = stats['canonical']
                 generation_info.append(info)
-                
+
                 print(f"\n  완료: {n_holes}개 피처 추가됨")
             else:
                 print(f"  모델 생성 실패")
@@ -274,7 +278,7 @@ def run_full_pipeline(
     print(f"  총 트리: {len(trees)}개")
     print(f"  생성된 모델: {len(generation_info)}개")
     if generation_info:
-        total_holes = sum(info["n_holes"] for info in generation_info)
+        total_holes = sum(info.get("n_milling_features", 0) for info in generation_info)
         print(f"  총 홀 수: {total_holes}")
     print(f"\n  결과 저장 위치:")
     print(f"    - 트리 데이터/시각화: {results_dir}/trees/")
@@ -304,13 +308,13 @@ def main():
             # Groove 파라미터
             groove_depth_range=(0.4, 0.8),
             groove_width_range=(1.5, 3.0),
-            groove_margin_ratio=0.15,
+            groove_margin=0.5,
             # 챔퍼/라운드
             chamfer_range=(0.3, 0.8),
             fillet_range=(0.3, 0.8),
             edge_feature_prob=0.3,
         ),
-        feature=FeatureParams(
+        milling=MillingParams(
             diameter_min=1.0,
             diameter_max_ratio=0.85,
             clearance=0.15,
@@ -322,8 +326,8 @@ def main():
         ),
         enable_milling=True,
         target_face_types=["Cylinder", "Cone"],
-        max_holes=8,
-        holes_per_face=2,
+        max_features=8,
+        features_per_face=2,
     )
     
     # 옵션 1: 기존 트리 파일 사용

@@ -14,10 +14,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.tree_generator import generate_trees
+from core.tree.generator import generate_trees
 from core.label_maker import Labels
 from pipeline import TurningMillingGenerator, TurningMillingParams
-from core import TurningParams, FeatureParams
+from core import TurningParams, MillingParams
 
 
 # ============================================================================
@@ -37,20 +37,20 @@ class TestTurningMillingParams:
     def test_default_params(self):
         params = TurningMillingParams()
         assert isinstance(params.turning, TurningParams)
-        assert isinstance(params.feature, FeatureParams)
+        assert isinstance(params.milling, MillingParams)
         assert params.enable_milling is True
         assert params.enable_labeling is False
-        assert params.target_face_types == ["Plane", "Cylinder"]
+        assert params.target_face_types == ["Cylinder"]
 
     def test_custom_params(self):
         params = TurningMillingParams(
             enable_milling=False,
             enable_labeling=True,
-            max_holes=10,
+            max_features=10,
         )
         assert params.enable_milling is False
         assert params.enable_labeling is True
-        assert params.max_holes == 10
+        assert params.max_features == 10
 
 
 # ============================================================================
@@ -64,28 +64,28 @@ class TestPipelineBasic:
         params = TurningMillingParams(enable_milling=False)
         gen = TurningMillingGenerator(params)
 
-        shape, placements = gen.generate_from_tree(trees[0], apply_edge_features=False)
+        shape, requests = gen.generate_from_tree(trees[0], apply_edge_feats=False)
 
         assert shape is not None
         assert not shape.IsNull()
-        assert placements == []
+        assert requests == []
 
     def test_generate_with_milling(self):
         """밀링 활성 → 터닝 + 밀링 피처"""
         trees = get_sample_trees()
         params = TurningMillingParams(
             enable_milling=True,
-            max_holes=2,
-            holes_per_face=1,
+            max_features=2,
+            features_per_face=1,
             target_face_types=["Cylinder"],
         )
         gen = TurningMillingGenerator(params)
 
-        shape, placements = gen.generate_from_tree(trees[0], apply_edge_features=False)
+        shape, requests = gen.generate_from_tree(trees[0], apply_edge_feats=False)
 
         assert shape is not None
         assert not shape.IsNull()
-        assert isinstance(placements, list)
+        assert isinstance(requests, list)
 
     def test_multiple_trees_generate_successfully(self):
         """여러 트리에서 형상 생성 성공률"""
@@ -96,7 +96,7 @@ class TestPipelineBasic:
         for tree in trees:
             gen = TurningMillingGenerator(params)
             try:
-                shape, _ = gen.generate_from_tree(tree, apply_edge_features=False)
+                shape, _ = gen.generate_from_tree(tree, apply_edge_feats=False)
                 if shape and not shape.IsNull():
                     success += 1
             except Exception:
@@ -119,7 +119,7 @@ class TestPipelineLabeling:
         )
         gen = TurningMillingGenerator(params)
 
-        gen.generate_from_tree(trees[0], apply_edge_features=False)
+        gen.generate_from_tree(trees[0], apply_edge_feats=False)
 
         assert gen.label_maker is not None
         assert gen.label_maker.get_total_faces() > 0
@@ -133,7 +133,7 @@ class TestPipelineLabeling:
         )
         gen = TurningMillingGenerator(params)
 
-        gen.generate_from_tree(trees[0], apply_edge_features=False)
+        gen.generate_from_tree(trees[0], apply_edge_feats=False)
 
         assert gen.label_maker is None
 
@@ -146,7 +146,7 @@ class TestPipelineLabeling:
         )
         gen = TurningMillingGenerator(params)
 
-        gen.generate_from_tree(trees[0], apply_edge_features=False)
+        gen.generate_from_tree(trees[0], apply_edge_feats=False)
 
         counts = gen.label_maker.get_label_counts()
         assert "stock" in counts
@@ -157,15 +157,15 @@ class TestPipelineLabeling:
         params = TurningMillingParams(
             enable_milling=True,
             enable_labeling=True,
-            max_holes=3,
-            holes_per_face=1,
+            max_features=3,
+            features_per_face=1,
             target_face_types=["Cylinder"],
         )
         gen = TurningMillingGenerator(params)
 
-        shape, placements = gen.generate_from_tree(trees[0], apply_edge_features=False)
+        shape, requests = gen.generate_from_tree(trees[0], apply_edge_feats=False)
 
-        if placements:
+        if requests:
             counts = gen.label_maker.get_label_counts()
             label_names = set(counts.keys())
             feature_labels = {"blind_hole", "through_hole", "rectangular_pocket", "rectangular_passage"}
@@ -183,40 +183,40 @@ class TestGetGenerationInfo:
         params = TurningMillingParams(enable_milling=False)
         gen = TurningMillingGenerator(params)
 
-        gen.generate_from_tree(trees[0], apply_edge_features=False)
+        gen.generate_from_tree(trees[0], apply_edge_feats=False)
         info = gen.get_generation_info()
 
         assert "stock_height" in info
         assert "stock_radius" in info
-        assert "n_holes" in info
-        assert "holes" in info
+        assert "n_milling_features" in info
+        assert "milling_features" in info
         assert info["stock_height"] > 0
         assert info["stock_radius"] > 0
-        assert info["n_holes"] == 0
+        assert info["n_milling_features"] == 0
 
-    def test_info_with_holes(self):
+    def test_info_with_milling_features(self):
         trees = get_sample_trees()
         params = TurningMillingParams(
             enable_milling=True,
-            max_holes=2,
+            max_features=2,
             target_face_types=["Cylinder"],
         )
         gen = TurningMillingGenerator(params)
 
-        shape, placements = gen.generate_from_tree(trees[0], apply_edge_features=False)
+        shape, requests = gen.generate_from_tree(trees[0], apply_edge_feats=False)
         info = gen.get_generation_info()
 
-        assert info["n_holes"] == len(placements)
-        assert len(info["holes"]) == len(placements)
+        assert info["n_milling_features"] == len(requests)
+        assert len(info["milling_features"]) == len(requests)
 
-        for h in info["holes"]:
-            assert "face_id" in h
-            assert "diameter" in h
-            assert "depth" in h
-            assert "center" in h
-            assert "direction" in h
-            assert len(h["center"]) == 3
-            assert len(h["direction"]) == 3
+        for feat in info["milling_features"]:
+            assert "face_id" in feat
+            assert "feature_type" in feat
+            assert "depth" in feat
+            assert "center" in feat
+            assert "direction" in feat
+            assert len(feat["center"]) == 3
+            assert len(feat["direction"]) == 3
 
 
 if __name__ == "__main__":
