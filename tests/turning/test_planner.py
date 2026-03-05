@@ -2,9 +2,10 @@
 """
 core/turning/planner.py 유닛 테스트
 
-- TurningPlanner.plan() → 올바른 FeatureRequest 생성
-- 제약조건 위반 시 request 생략
-- Bottom-Up 공간 계산 정확성
+- TurningPlanner.plan_and_apply() → 올바른 형상 생성
+- TurningTreePlanner.plan() → Top-Down BFS로 node.region 확정
+- TurningShapeBuilder.build() → 형상 생성
+- z 범위 충돌 검사
 
 테스트 실행:
     pytest tests/turning/test_planner.py -v
@@ -17,9 +18,13 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from core.tree.node import load_tree
-from core.turning.planner import TurningPlanner, TurningParams
-from core.turning.features import StockInfo, TurningFeatureRequest
+from core.tree.node import load_tree, Region
+from core.turning.planner import (
+    TurningPlanner, TurningTreePlanner,
+)
+from core.turning.builder import TurningShapeBuilder
+from core.turning.params import TurningParams
+from OCC.Extend.TopologyUtils import TopologyExplorer
 
 
 # ============================================================================
@@ -88,130 +93,82 @@ TREE_SIBLING_GROOVES = {
 }
 
 
+def count_faces(shape):
+    return len(list(TopologyExplorer(shape).faces()))
+
+
 # ============================================================================
-# TurningPlanner 기본 테스트
+# TurningPlanner 기본 테스트 (plan_and_apply 통합)
 # ============================================================================
 
 class TestTurningPlannerBasic:
-    def test_base_only_returns_empty_requests(self):
+    def test_base_only_returns_valid_shape(self):
         planner = TurningPlanner()
         root = load_tree(TREE_BASE_ONLY)
-        stock_info, requests = planner.plan(root)
+        stock_h, stock_r, shape = planner.plan_and_apply(root)
 
-        assert isinstance(stock_info, StockInfo)
-        assert stock_info.height > 0
-        assert stock_info.radius > 0
-        assert requests == []
+        assert stock_h > 0
+        assert stock_r > 0
+        assert shape is not None
+        assert not shape.IsNull()
 
-    def test_single_step_returns_one_request(self):
+    def test_single_step_adds_faces(self):
         planner = TurningPlanner()
         root = load_tree(TREE_WITH_STEP)
-        stock_info, requests = planner.plan(root)
+        stock_h, stock_r, shape = planner.plan_and_apply(root)
 
-        step_reqs = [r for r in requests if r.feature_type == 'step']
-        assert len(step_reqs) == 1
+        assert shape is not None
+        assert not shape.IsNull()
+        assert count_faces(shape) > 3
 
-    def test_single_groove_returns_one_request(self):
+    def test_single_groove_adds_faces(self):
         planner = TurningPlanner()
         root = load_tree(TREE_WITH_GROOVE)
-        stock_info, requests = planner.plan(root)
+        stock_h, stock_r, shape = planner.plan_and_apply(root)
 
-        groove_reqs = [r for r in requests if r.feature_type == 'groove']
-        assert len(groove_reqs) == 1
+        assert shape is not None
+        assert not shape.IsNull()
+        assert count_faces(shape) > 3
 
     def test_step_and_groove(self):
         planner = TurningPlanner()
         root = load_tree(TREE_STEP_AND_GROOVE)
-        stock_info, requests = planner.plan(root)
+        stock_h, stock_r, shape = planner.plan_and_apply(root)
 
-        assert any(r.feature_type == 'step' for r in requests)
-        assert any(r.feature_type == 'groove' for r in requests)
+        assert shape is not None
+        assert not shape.IsNull()
 
     def test_two_steps(self):
         planner = TurningPlanner()
         root = load_tree(TREE_TWO_STEPS)
-        stock_info, requests = planner.plan(root)
+        stock_h, stock_r, shape = planner.plan_and_apply(root)
 
-        step_reqs = [r for r in requests if r.feature_type == 'step']
-        assert len(step_reqs) == 2
+        assert shape is not None
+        assert not shape.IsNull()
 
 
 # ============================================================================
-# StockInfo 검증
+# Stock 크기 검증
 # ============================================================================
 
-class TestStockInfo:
-    def test_stock_includes_margin(self):
+class TestStockSize:
+    def test_stock_within_range(self):
         params = TurningParams(
-            stock_height_margin=(3.0, 3.0),
-            stock_radius_margin=(2.0, 2.0),
+            stock_height_range=(10.0, 10.0),
+            stock_radius_range=(5.0, 5.0),
         )
         planner = TurningPlanner(params)
         root = load_tree(TREE_WITH_STEP)
-        stock_info, _ = planner.plan(root)
+        stock_h, stock_r, _ = planner.plan_and_apply(root)
 
-        assert stock_info.height > 0
-        assert stock_info.radius > params.min_remaining_radius
+        assert stock_h == pytest.approx(10.0, abs=1e-9)
+        assert stock_r == pytest.approx(5.0, abs=1e-9)
 
     def test_stock_radius_greater_than_min_remaining(self):
         planner = TurningPlanner()
         root = load_tree(TREE_NESTED)
-        stock_info, _ = planner.plan(root)
-        assert stock_info.radius > planner.params.min_remaining_radius
-
-
-# ============================================================================
-# TurningFeatureRequest 검증
-# ============================================================================
-
-class TestFeatureRequestValidity:
-    def test_step_z_range_within_stock(self):
-        planner = TurningPlanner()
-        root = load_tree(TREE_WITH_STEP)
-        stock_info, requests = planner.plan(root)
-
-        for req in requests:
-            assert req.z_min >= 0
-            assert req.z_max <= stock_info.height
-            assert req.z_min < req.z_max
-
-    def test_step_radii_valid(self):
-        planner = TurningPlanner()
-        root = load_tree(TREE_WITH_STEP)
-        stock_info, requests = planner.plan(root)
-
-        for req in [r for r in requests if r.feature_type == 'step']:
-            assert req.outer_radius <= stock_info.radius
-            assert req.inner_radius > 0
-            assert req.inner_radius < req.outer_radius
-
-    def test_groove_z_range_within_stock(self):
-        planner = TurningPlanner()
-        root = load_tree(TREE_WITH_GROOVE)
-        stock_info, requests = planner.plan(root)
-
-        for req in [r for r in requests if r.feature_type == 'groove']:
-            assert req.z_min >= 0
-            assert req.z_max <= stock_info.height
-            assert req.z_min < req.z_max
-
-    def test_step_label_is_correct(self):
-        from core.label_maker import Labels
-        planner = TurningPlanner()
-        root = load_tree(TREE_WITH_STEP)
-        _, requests = planner.plan(root)
-
-        for req in [r for r in requests if r.feature_type == 'step']:
-            assert req.label == Labels.STEP
-
-    def test_groove_label_is_correct(self):
-        from core.label_maker import Labels
-        planner = TurningPlanner()
-        root = load_tree(TREE_WITH_GROOVE)
-        _, requests = planner.plan(root)
-
-        for req in [r for r in requests if r.feature_type == 'groove']:
-            assert req.label == Labels.GROOVE
+        stock_h, stock_r, _ = planner.plan_and_apply(root)
+        assert stock_r > planner.params.min_remaining_radius
 
 
 # ============================================================================
@@ -222,61 +179,208 @@ class TestComplexTrees:
     def test_nested_tree(self):
         planner = TurningPlanner()
         root = load_tree(TREE_NESTED)
-        stock_info, requests = planner.plan(root)
+        stock_h, stock_r, shape = planner.plan_and_apply(root)
 
-        assert stock_info.height > 0
-        assert stock_info.radius > 0
+        assert stock_h > 0
+        assert stock_r > 0
+        assert shape is not None
 
     def test_sibling_grooves(self):
         planner = TurningPlanner()
         root = load_tree(TREE_SIBLING_GROOVES)
-        stock_info, requests = planner.plan(root)
+        stock_h, stock_r, shape = planner.plan_and_apply(root)
 
-        groove_reqs = [r for r in requests if r.feature_type == 'groove']
-        assert len(groove_reqs) <= 2
+        assert shape is not None
+        assert not shape.IsNull()
 
-    def test_no_overlapping_step_grooves(self):
-        """Step과 Groove가 z 범위에서 겹치지 않아야 함 (대략적인 검증)"""
+
+# ============================================================================
+# z 범위 충돌 검사 검증
+# ============================================================================
+
+class TestZOverlapCheck:
+    def test_no_overlap_initially(self):
+        builder = TurningShapeBuilder(10.0, 5.0)
+        assert not builder._check_z_overlap(0.0, 5.0)
+
+    def test_overlap_detected(self):
+        builder = TurningShapeBuilder(10.0, 5.0)
+        builder._register_z_range(5.0, 15.0)
+        assert builder._check_z_overlap(10.0, 20.0)
+        assert builder._check_z_overlap(5.0, 15.0)
+        assert builder._check_z_overlap(7.0, 12.0)
+
+    def test_adjacent_no_overlap(self):
+        builder = TurningShapeBuilder(10.0, 5.0)
+        builder._register_z_range(5.0, 10.0)
+        assert not builder._check_z_overlap(10.0, 15.0)
+        assert not builder._check_z_overlap(0.0, 5.0)
+
+    def test_step_groove_no_overlap_after_plan(self):
+        """Step과 Groove가 겹치지 않아야 함."""
         planner = TurningPlanner()
         root = load_tree(TREE_STEP_AND_GROOVE)
-        stock_info, requests = planner.plan(root)
+        planner.plan_and_apply(root)
 
-        for req in requests:
-            assert req.z_min < req.z_max
-            assert req.z_min >= 0
-            assert req.z_max <= stock_info.height
+        ranges = planner._occupied_ranges
+        for i in range(len(ranges)):
+            for j in range(i + 1, len(ranges)):
+                a_min, a_max = ranges[i]
+                b_min, b_max = ranges[j]
+                assert not (a_min < b_max and a_max > b_min), \
+                    f"z 범위 겹침 발견: [{a_min:.2f},{a_max:.2f}] vs [{b_min:.2f},{b_max:.2f}]"
+
+    def test_sibling_grooves_no_overlap(self):
+        """형제 Groove들이 겹치지 않아야 함."""
+        planner = TurningPlanner()
+        root = load_tree(TREE_SIBLING_GROOVES)
+        planner.plan_and_apply(root)
+
+        ranges = planner._occupied_ranges
+        for i in range(len(ranges)):
+            for j in range(i + 1, len(ranges)):
+                a_min, a_max = ranges[i]
+                b_min, b_max = ranges[j]
+                assert not (a_min < b_max and a_max > b_min), \
+                    f"z 범위 겹침 발견: [{a_min:.2f},{a_max:.2f}] vs [{b_min:.2f},{b_max:.2f}]"
 
 
 # ============================================================================
-# Required Space 계산 검증
+# TurningTreePlanner: Top-Down BFS region 확정 테스트
 # ============================================================================
 
-class TestRequiredSpaceCalculation:
-    def test_base_required_space_exists(self):
-        planner = TurningPlanner()
+class TestTurningTreePlannerPlan:
+    def test_plan_returns_positive_stock_size(self):
+        tp = TurningTreePlanner()
         root = load_tree(TREE_WITH_STEP)
-        planner._calculate_required_space(root)
+        stock_h, stock_r = tp.plan(root)
 
-        assert root.required_space is not None
-        assert root.required_space.height >= 0
-        assert root.required_space.depth >= 0
+        assert stock_h > 0
+        assert stock_r > 0
 
-    def test_step_required_space_positive(self):
-        planner = TurningPlanner()
+    def test_plan_within_stock_range(self):
+        params = TurningParams(
+            stock_height_range=(10.0, 20.0),
+            stock_radius_range=(5.0, 10.0),
+        )
+        tp = TurningTreePlanner(params)
         root = load_tree(TREE_WITH_STEP)
-        planner._calculate_required_space(root)
+        stock_h, stock_r = tp.plan(root)
 
-        step_node = root.children[0]
-        assert step_node.required_space is not None
-        assert step_node.required_space.feature_height > 0
-        assert step_node.required_space.feature_depth > 0
+        assert 10.0 <= stock_h <= 20.0
+        assert 5.0 <= stock_r <= 10.0
 
-    def test_groove_required_space_positive(self):
-        planner = TurningPlanner()
+    def test_plan_fills_root_region(self):
+        tp = TurningTreePlanner()
+        root = load_tree(TREE_WITH_STEP)
+        stock_h, stock_r = tp.plan(root)
+
+        assert root.region is not None
+        assert root.region.z_min == pytest.approx(0.0)
+        assert root.region.z_max == pytest.approx(stock_h)
+        assert root.region.radius == pytest.approx(stock_r)
+
+    def test_plan_fills_step_region(self):
+        tp = TurningTreePlanner()
+        root = load_tree(TREE_WITH_STEP)
+        tp.plan(root)
+
+        step = root.children[0]
+        assert step.region is not None
+        assert isinstance(step.region, Region)
+
+    def test_plan_fills_groove_region(self):
+        tp = TurningTreePlanner()
         root = load_tree(TREE_WITH_GROOVE)
-        planner._calculate_required_space(root)
+        tp.plan(root)
 
-        groove_node = root.children[0]
-        assert groove_node.required_space is not None
-        assert groove_node.required_space.feature_height > 0
-        assert groove_node.required_space.feature_depth > 0
+        groove = root.children[0]
+        assert groove.region is not None
+        assert isinstance(groove.region, Region)
+
+    def test_step_region_within_stock(self):
+        """Step region이 stock 범위를 벗어나지 않아야 함."""
+        params = TurningParams(
+            stock_height_range=(20.0, 20.0),
+            stock_radius_range=(8.0, 8.0),
+        )
+        tp = TurningTreePlanner(params)
+        root = load_tree(TREE_WITH_STEP)
+        stock_h, stock_r = tp.plan(root)
+
+        step = root.children[0]
+        if step.region is not None:
+            assert step.region.z_min >= 0.0
+            assert step.region.z_max <= stock_h
+            assert step.region.radius < stock_r
+
+    def test_groove_region_within_parent(self):
+        """Groove region이 부모(stock) 범위 안에 있어야 함."""
+        tp = TurningTreePlanner()
+        root = load_tree(TREE_WITH_GROOVE)
+        stock_h, stock_r = tp.plan(root)
+
+        groove = root.children[0]
+        if groove.region is not None:
+            assert groove.region.z_min >= 0.0
+            assert groove.region.z_max <= stock_h
+            assert groove.region.radius < stock_r
+
+    def test_step_direction_set(self):
+        """Step region의 direction이 설정되어 있어야 함."""
+        tp = TurningTreePlanner()
+        root = load_tree(TREE_WITH_STEP)
+        tp.plan(root)
+
+        step = root.children[0]
+        if step.region is not None:
+            assert step.region.direction in ('top', 'bottom')
+
+    def test_sibling_grooves_in_different_slots(self):
+        """형제 groove들이 서로 다른 위치에 배치되어야 함."""
+        tp = TurningTreePlanner()
+        root = load_tree(TREE_SIBLING_GROOVES)
+        tp.plan(root)
+
+        grooves = [c for c in root.children if c.label == 'g']
+        regions = [g.region for g in grooves if g.region is not None]
+        for i in range(len(regions)):
+            for j in range(i + 1, len(regions)):
+                overlap = regions[i].z_min < regions[j].z_max and regions[i].z_max > regions[j].z_min
+                assert not overlap, \
+                    f"형제 groove region 겹침: {regions[i]} vs {regions[j]}"
+
+
+# ============================================================================
+# TurningShapeBuilder.build() 단위 테스트
+# ============================================================================
+
+class TestTurningShapeBuilder:
+    def _prepare_builder(self, tree_data, params=None):
+        params = params or TurningParams()
+        tp = TurningTreePlanner(params)
+        root = load_tree(tree_data)
+        stock_h, stock_r = tp.plan(root)
+        builder = TurningShapeBuilder(stock_h, stock_r, params)
+        return builder, root
+
+    def test_build_returns_valid_shape(self):
+        builder, root = self._prepare_builder(TREE_BASE_ONLY)
+        shape = builder.build(root)
+        assert shape is not None
+        assert not shape.IsNull()
+
+    def test_build_step_adds_faces(self):
+        builder, root = self._prepare_builder(TREE_WITH_STEP)
+        shape = builder.build(root)
+        assert count_faces(shape) > 3
+
+    def test_build_groove_adds_faces(self):
+        builder, root = self._prepare_builder(TREE_WITH_GROOVE)
+        shape = builder.build(root)
+        assert count_faces(shape) > 3
+
+    def test_builder_occupied_ranges_registered(self):
+        builder, root = self._prepare_builder(TREE_STEP_AND_GROOVE)
+        builder.build(root)
+        assert len(builder._occupied_ranges) >= 1

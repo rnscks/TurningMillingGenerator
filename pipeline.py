@@ -21,8 +21,9 @@ from typing import List, Dict, Optional, Tuple
 from OCC.Core.TopoDS import TopoDS_Shape
 
 from core.tree.node import load_tree
-from core.turning.planner import TurningPlanner, TurningParams
-from core.turning.features import StockInfo, apply_edge_features
+from core.turning.planner import TurningPlanner
+from core.turning.params import TurningParams
+from core.turning.features import apply_edge_features
 from core.milling.features import MillingParams, MillingFeatureRequest, apply_milling_requests
 from core.milling.analyzer import MillingAnalyzer
 from core.label_maker import LabelMaker
@@ -70,7 +71,8 @@ class TurningMillingGenerator:
         self.shape: Optional[TopoDS_Shape] = None
         self.milling_requests: List[MillingFeatureRequest] = []
         self.label_maker: Optional[LabelMaker] = None
-        self._stock_info: Optional[StockInfo] = None
+        self._stock_height: float = 0.0
+        self._stock_radius: float = 0.0
 
     def generate_from_tree(
         self,
@@ -93,8 +95,9 @@ class TurningMillingGenerator:
 
         # 1. 터닝 계획 → 실행
         root = load_tree(tree)
-        stock_info, shape = self.planner.plan_and_apply(root, self.label_maker)
-        self._stock_info = stock_info
+        stock_height, stock_radius, shape = self.planner.plan_and_apply(root, self.label_maker)
+        self._stock_height = stock_height
+        self._stock_radius = stock_radius
 
         # 2. 엣지 피처 후처리
         if apply_edge_feats:
@@ -132,11 +135,9 @@ class TurningMillingGenerator:
 
     def get_generation_info(self) -> Dict:
         """생성 정보 반환"""
-        stock_height = self._stock_info.height if self._stock_info else 0.0
-        stock_radius = self._stock_info.radius if self._stock_info else 0.0
         return {
-            "stock_height": stock_height,
-            "stock_radius": stock_radius,
+            "stock_height": self._stock_height,
+            "stock_radius": self._stock_radius,
             "n_milling_features": len(self.milling_requests),
             "milling_features": [
                 {

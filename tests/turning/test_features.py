@@ -2,10 +2,9 @@
 """
 core/turning/features.py 유닛 테스트
 
-- TurningParams, StockInfo, TurningFeatureRequest 데이터 클래스 검증
 - create_step_cut / create_groove_cut 형상 유효성
 - create_stock 형상 유효성
-- apply_turning_requests 실행 정확성
+- apply_step_cut / apply_groove_cut 실행 정확성
 - apply_edge_features 동작 검증
 
 테스트 실행:
@@ -23,14 +22,13 @@ from OCC.Core.gp import gp_Ax2, gp_Pnt, gp_Dir
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeCylinder
 from OCC.Extend.TopologyUtils import TopologyExplorer
 
-from core.turning.planner import TurningParams
+from core.turning.params import TurningParams
 from core.turning.features import (
-    StockInfo,
-    TurningFeatureRequest,
+    create_stock,
     create_step_cut,
     create_groove_cut,
-    create_stock,
-    apply_turning_requests,
+    apply_step_cut,
+    apply_groove_cut,
     apply_edge_features,
     collect_circular_edges,
 )
@@ -77,56 +75,17 @@ class TestTurningParams:
 
 
 # ============================================================================
-# StockInfo 테스트
-# ============================================================================
-
-class TestStockInfo:
-    def test_fields(self):
-        info = StockInfo(height=30.0, radius=15.0)
-        assert info.height == 30.0
-        assert info.radius == 15.0
-
-
-# ============================================================================
-# TurningFeatureRequest 테스트
-# ============================================================================
-
-class TestTurningFeatureRequest:
-    def test_step_request(self):
-        req = TurningFeatureRequest(
-            feature_type='step',
-            z_min=5.0, z_max=10.0,
-            outer_radius=10.0, inner_radius=8.0,
-            label=Labels.STEP
-        )
-        assert req.feature_type == 'step'
-        assert req.z_min == 5.0
-        assert req.label == Labels.STEP
-
-    def test_groove_request(self):
-        req = TurningFeatureRequest(
-            feature_type='groove',
-            z_min=3.0, z_max=5.0,
-            outer_radius=10.0, inner_radius=9.0,
-            label=Labels.GROOVE
-        )
-        assert req.feature_type == 'groove'
-
-
-# ============================================================================
 # create_stock 테스트
 # ============================================================================
 
 class TestCreateStock:
     def test_basic(self):
-        info = StockInfo(height=20.0, radius=10.0)
-        shape = create_stock(info)
+        shape = create_stock(height=20.0, radius=10.0)
         assert shape is not None
         assert not shape.IsNull()
 
     def test_face_count(self):
-        info = StockInfo(height=20.0, radius=10.0)
-        shape = create_stock(info)
+        shape = create_stock(height=20.0, radius=10.0)
         n_faces = count_faces(shape)
         assert n_faces == 3  # 원통: 측면 + 상면 + 하면
 
@@ -136,18 +95,27 @@ class TestCreateStock:
 # ============================================================================
 
 class TestCreateStepCut:
-    def test_basic_shape(self):
-        shape = create_step_cut(5.0, 10.0, 10.0, 8.0)
+    def test_top_direction(self):
+        shape = create_step_cut(zpos=10.0, direction='top', outer_r=10.0, inner_r=8.0, stock_height=20.0)
         assert shape is not None
         assert not shape.IsNull()
 
-    def test_invalid_z_range(self):
-        with pytest.raises(ValueError):
-            create_step_cut(10.0, 5.0, 10.0, 8.0)
+    def test_bottom_direction(self):
+        shape = create_step_cut(zpos=10.0, direction='bottom', outer_r=10.0, inner_r=8.0, stock_height=20.0)
+        assert shape is not None
+        assert not shape.IsNull()
 
-    def test_equal_z_raises(self):
+    def test_invalid_direction(self):
         with pytest.raises(ValueError):
-            create_step_cut(5.0, 5.0, 10.0, 8.0)
+            create_step_cut(zpos=10.0, direction='left', outer_r=10.0, inner_r=8.0, stock_height=20.0)
+
+    def test_top_zpos_at_stock_top_raises(self):
+        with pytest.raises(ValueError):
+            create_step_cut(zpos=20.0, direction='top', outer_r=10.0, inner_r=8.0, stock_height=20.0)
+
+    def test_bottom_zpos_at_zero_raises(self):
+        with pytest.raises(ValueError):
+            create_step_cut(zpos=0.0, direction='bottom', outer_r=10.0, inner_r=8.0, stock_height=20.0)
 
 
 # ============================================================================
@@ -156,72 +124,76 @@ class TestCreateStepCut:
 
 class TestCreateGrooveCut:
     def test_basic_shape(self):
-        shape = create_groove_cut(5.0, 7.0, 10.0, 9.0)
+        shape = create_groove_cut(zpos=5.0, width=2.0, outer_r=10.0, inner_r=9.0)
         assert shape is not None
         assert not shape.IsNull()
 
-    def test_invalid_z_range(self):
+    def test_zero_width_raises(self):
         with pytest.raises(ValueError):
-            create_groove_cut(7.0, 5.0, 10.0, 9.0)
+            create_groove_cut(zpos=5.0, width=0.0, outer_r=10.0, inner_r=9.0)
+
+    def test_negative_width_raises(self):
+        with pytest.raises(ValueError):
+            create_groove_cut(zpos=5.0, width=-1.0, outer_r=10.0, inner_r=9.0)
 
 
 # ============================================================================
-# apply_turning_requests 테스트
+# apply_step_cut / apply_groove_cut 테스트
 # ============================================================================
 
-class TestApplyTurningRequests:
-    def test_empty_requests(self):
+class TestApplyStepCut:
+    def test_top_adds_faces(self):
         stock = make_cylinder(10.0, 20.0)
-        result = apply_turning_requests(stock, [])
-        assert result is not None
-        assert not result.IsNull()
-
-    def test_single_step(self):
-        stock = make_cylinder(10.0, 20.0)
-        req = TurningFeatureRequest(
-            feature_type='step',
-            z_min=15.0, z_max=20.0,
-            outer_radius=10.0, inner_radius=7.0,
-            label=Labels.STEP
-        )
-        result = apply_turning_requests(stock, [req])
+        result = apply_step_cut(stock, zpos=10.0, direction='top', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
         assert result is not None
         assert not result.IsNull()
         assert count_faces(result) > count_faces(stock)
 
-    def test_single_groove(self):
+    def test_bottom_adds_faces(self):
         stock = make_cylinder(10.0, 20.0)
-        req = TurningFeatureRequest(
-            feature_type='groove',
-            z_min=8.0, z_max=10.0,
-            outer_radius=10.0, inner_radius=8.5,
-            label=Labels.GROOVE
-        )
-        result = apply_turning_requests(stock, [req])
+        result = apply_step_cut(stock, zpos=10.0, direction='bottom', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
         assert result is not None
         assert not result.IsNull()
+        assert count_faces(result) > count_faces(stock)
 
-    def test_multiple_requests(self):
-        stock = make_cylinder(10.0, 30.0)
-        requests = [
-            TurningFeatureRequest('step', 25.0, 30.0, 10.0, 7.0, Labels.STEP),
-            TurningFeatureRequest('groove', 10.0, 12.0, 10.0, 8.5, Labels.GROOVE),
-        ]
-        result = apply_turning_requests(stock, requests)
-        assert result is not None
-        assert not result.IsNull()
-
-    def test_unknown_type_skipped(self):
+    def test_zpos_at_boundary_raises(self):
         stock = make_cylinder(10.0, 20.0)
-        req = TurningFeatureRequest(
-            feature_type='unknown',
-            z_min=5.0, z_max=10.0,
-            outer_radius=10.0, inner_radius=8.0,
-            label=0
-        )
-        result = apply_turning_requests(stock, [req])
+        with pytest.raises(ValueError):
+            apply_step_cut(stock, zpos=20.0, direction='top', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
+
+    def test_generates_exactly_2_new_faces(self):
+        """Step Boolean Cut은 정상 시 inner 원통면 + 링 평면 = 2개의 새 face를 생성해야 함."""
+        from core.design_operation import DesignOperation
+        from core.turning.features import create_step_cut
+        stock = make_cylinder(10.0, 20.0)
+        cut = create_step_cut(zpos=10.0, direction='top', outer_r=10.0, inner_r=7.0, stock_height=20.0)
+        op = DesignOperation(stock)
+        op.cut(cut)
+        assert len(op.generated_faces) == 2, f"Step generated_faces={len(op.generated_faces)}, expected=2"
+
+
+class TestApplyGrooveCut:
+    def test_adds_faces(self):
+        stock = make_cylinder(10.0, 20.0)
+        result = apply_groove_cut(stock, zpos=8.0, width=2.0, outer_radius=10.0, inner_radius=8.5)
         assert result is not None
         assert not result.IsNull()
+        assert count_faces(result) > count_faces(stock)
+
+    def test_zero_width_raises(self):
+        stock = make_cylinder(10.0, 20.0)
+        with pytest.raises(ValueError):
+            apply_groove_cut(stock, zpos=8.0, width=0.0, outer_radius=10.0, inner_radius=8.5)
+
+    def test_generates_exactly_3_new_faces(self):
+        """Groove Boolean Cut은 정상 시 inner 원통면 + 상단 링 + 하단 링 = 3개의 새 face를 생성해야 함."""
+        from core.design_operation import DesignOperation
+        from core.turning.features import create_groove_cut
+        stock = make_cylinder(10.0, 20.0)
+        cut = create_groove_cut(zpos=8.0, width=2.0, outer_r=10.0, inner_r=8.5)
+        op = DesignOperation(stock)
+        op.cut(cut)
+        assert len(op.generated_faces) == 3, f"Groove generated_faces={len(op.generated_faces)}, expected=3"
 
 
 # ============================================================================
@@ -236,8 +208,7 @@ class TestCollectCircularEdges:
 
     def test_after_step_cut(self):
         stock = make_cylinder(10.0, 20.0)
-        req = TurningFeatureRequest('step', 15.0, 20.0, 10.0, 7.0, Labels.STEP)
-        shape = apply_turning_requests(stock, [req])
+        shape = apply_step_cut(stock, zpos=10.0, direction='top', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
         edges = collect_circular_edges(shape)
         assert len(edges) > 0
 
@@ -249,8 +220,7 @@ class TestCollectCircularEdges:
 class TestApplyEdgeFeatures:
     def test_returns_valid_shape(self):
         stock = make_cylinder(10.0, 20.0)
-        req = TurningFeatureRequest('step', 15.0, 20.0, 10.0, 7.0, Labels.STEP)
-        shape = apply_turning_requests(stock, [req])
+        shape = apply_step_cut(stock, zpos=10.0, direction='top', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
 
         result = apply_edge_features(shape, edge_feature_prob=1.0,
                                      chamfer_range=(0.3, 0.8), fillet_range=(0.3, 0.8))

@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from core.tree.node import Region, RequiredSpace, TreeNode, load_tree
+from core.tree.node import Region, TreeNode, load_tree
 
 
 SIMPLE_TREE = {
@@ -61,22 +61,6 @@ class TestRegion:
         assert 'bottom' in s
 
 
-class TestRequiredSpace:
-    def test_fields(self):
-        rs = RequiredSpace(height=5.0, depth=2.0, feature_height=3.0, feature_depth=1.5)
-        assert rs.height == pytest.approx(5.0)
-        assert rs.depth == pytest.approx(2.0)
-        assert rs.feature_height == pytest.approx(3.0)
-        assert rs.feature_depth == pytest.approx(1.5)
-
-    def test_margin_default_zero(self):
-        rs = RequiredSpace(height=4.0, depth=1.0, feature_height=2.0, feature_depth=0.5)
-        assert rs.margin == pytest.approx(0.0)
-
-    def test_margin_set(self):
-        rs = RequiredSpace(height=4.0, depth=1.0, feature_height=2.0, feature_depth=0.5, margin=0.3)
-        assert rs.margin == pytest.approx(0.3)
-
 
 class TestTreeNode:
     def test_init_fields(self):
@@ -90,7 +74,6 @@ class TestTreeNode:
         node = TreeNode(node_id=0, label='b', parent_id=None, depth=0)
         assert node.children == []
         assert node.region is None
-        assert node.required_space is None
         assert node.parent_node is None
 
     def test_repr(self):
@@ -146,7 +129,7 @@ class TestLoadTree:
 
     def test_required_space_initially_none(self):
         root = load_tree(SIMPLE_TREE)
-        assert root.required_space is None
+        assert root.region is None
 
     def test_depth_values(self):
         root = load_tree(NESTED_TREE)

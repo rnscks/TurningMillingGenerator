@@ -2,7 +2,6 @@
 트리 노드 데이터 클래스
 
 - Region: z 범위와 반경으로 표현되는 가공 가능 영역
-- RequiredSpace: Bottom-Up으로 계산된 필요 공간
 - TreeNode: 터닝 트리 구조의 단일 노드
 """
 
@@ -29,16 +28,6 @@ class Region:
         )
 
 
-@dataclass
-class RequiredSpace:
-    """Bottom-Up으로 계산된 필요 공간 (margin 포함, 한 곳에서만 계산)"""
-    height: float           # 필요한 z 높이 (margin 포함 총 크기)
-    depth: float            # 필요한 반경 깊이 (누적)
-    feature_height: float   # 자신의 피처 높이 (step height 또는 groove 커팅 폭)
-    feature_depth: float    # 자신의 피처 깊이
-    margin: float = 0.0     # 자신의 z방향 margin (양쪽 각각)
-
-
 class TreeNode:
     """트리 노드 클래스"""
 
@@ -49,7 +38,6 @@ class TreeNode:
         self.depth = depth
         self.children: List['TreeNode'] = []
         self.region: Optional[Region] = None
-        self.required_space: Optional[RequiredSpace] = None
         self.parent_node: Optional['TreeNode'] = None
 
     def __repr__(self):

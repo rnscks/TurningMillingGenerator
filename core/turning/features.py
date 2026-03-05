@@ -1,19 +1,16 @@
 """
 터닝 특징형상 모듈
 
-- StockInfo: Stock 생성 정보
-- TurningFeatureRequest: Planner 내부 계획 결과 → Boolean Cut 입력 계약
-- create_step_cut / create_groove_cut: 순수 형상 생성 (annular ring)
 - create_stock: 원통 스톡 생성
+- create_step_cut / create_groove_cut: 순수 형상 생성 (annular ring)
+- apply_step_cut / apply_groove_cut: Boolean Cut 적용 (단일 피처)
 - apply_chamfer / apply_fillet: 단일 엣지 피처 적용
 - apply_edge_features: 원형 엣지 전체 후처리
-- apply_turning_requests: request 목록을 순서대로 Boolean Cut 적용
 
 TurningParams는 TurningPlanner의 설정 객체로 planner.py에 정의됩니다.
 """
 
 import random
-from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from OCC.Core.gp import gp_Ax2, gp_Pnt, gp_Dir
@@ -30,44 +27,41 @@ from core.label_maker import LabelMaker, Labels
 
 
 # ============================================================================
-# Data Classes
-# ============================================================================
-
-@dataclass
-class StockInfo:
-    """Stock 생성 정보 (Planner 출력 → create_stock 입력)"""
-    height: float
-    radius: float
-
-
-@dataclass
-class TurningFeatureRequest:
-    """터닝 특징형상 적용 요청 (Planner → apply_turning_requests 계약)"""
-    feature_type: str       # 'step' or 'groove'
-    z_min: float
-    z_max: float
-    outer_radius: float
-    inner_radius: float
-    label: int              # Labels.STEP or Labels.GROOVE
-
-
-# ============================================================================
 # 형상 생성 (순수 함수)
 # ============================================================================
 
+def create_stock(height: float, radius: float) -> TopoDS_Shape:
+    """원통 스톡 생성."""
+    axis = gp_Ax2(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1))
+    return BRepPrimAPI_MakeCylinder(axis, radius, height).Shape()
+
+
 def create_step_cut(
-    z_min: float,
-    z_max: float,
+    zpos: float,
+    direction: str,
     outer_r: float,
     inner_r: float,
+    stock_height: float,
 ) -> TopoDS_Shape:
     """Step 가공용 annular ring 형상 생성 (Boolean Cut 도구).
 
-    outer_r 원통에서 inner_r 원통을 뺀 링 형상을 반환한다.
+    Step은 zpos를 경계로 방향에 따라 stock 끝까지 깎아낸다.
+
+    - direction='top'    : zpos ~ stock_height 구간을 outer_r → inner_r 링으로 제거
+    - direction='bottom' : 0 ~ zpos 구간을 outer_r → inner_r 링으로 제거
     """
+    if direction == 'top':
+        z_min, z_max = zpos, stock_height
+    elif direction == 'bottom':
+        z_min, z_max = 0.0, zpos
+    else:
+        raise ValueError(f"direction must be 'top' or 'bottom', got '{direction}'")
+
     height = z_max - z_min
     if height <= 0:
-        raise ValueError(f"z_max({z_max}) must be greater than z_min({z_min})")
+        raise ValueError(
+            f"Step 높이가 0 이하: direction='{direction}', zpos={zpos}, stock_height={stock_height}"
+        )
 
     axis = gp_Ax2(gp_Pnt(0, 0, z_min), gp_Dir(0, 0, 1))
     outer = BRepPrimAPI_MakeCylinder(axis, outer_r, height).Shape()
@@ -76,29 +70,117 @@ def create_step_cut(
 
 
 def create_groove_cut(
-    z_min: float,
-    z_max: float,
+    zpos: float,
+    width: float,
     outer_r: float,
     inner_r: float,
 ) -> TopoDS_Shape:
     """Groove 가공용 annular ring 형상 생성 (Boolean Cut 도구).
 
-    outer_r 원통에서 inner_r 원통을 뺀 링 형상을 반환한다.
-    """
-    height = z_max - z_min
-    if height <= 0:
-        raise ValueError(f"z_max({z_max}) must be greater than z_min({z_min})")
+    zpos를 groove 시작점(z_min)으로, zpos+width를 끝점(z_max)으로 사용한다.
 
+    Args:
+        zpos: groove 시작 z 위치 (z_min)
+        width: groove 폭 (z 방향 길이)
+        outer_r: groove 바깥 반경 (부모 반경)
+        inner_r: groove 안쪽 반경 (깎인 후 반경)
+    """
+    if width <= 0:
+        raise ValueError(f"width must be positive, got {width}")
+
+    z_min, z_max = zpos, zpos + width
     axis = gp_Ax2(gp_Pnt(0, 0, z_min), gp_Dir(0, 0, 1))
-    outer = BRepPrimAPI_MakeCylinder(axis, outer_r, height).Shape()
-    inner = BRepPrimAPI_MakeCylinder(axis, inner_r, height).Shape()
+    outer = BRepPrimAPI_MakeCylinder(axis, outer_r, width).Shape()
+    inner = BRepPrimAPI_MakeCylinder(axis, inner_r, width).Shape()
     return BRepAlgoAPI_Cut(outer, inner).Shape()
 
 
-def create_stock(info: StockInfo) -> TopoDS_Shape:
-    """원통 스톡 생성."""
-    axis = gp_Ax2(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1))
-    return BRepPrimAPI_MakeCylinder(axis, info.radius, info.height).Shape()
+# ============================================================================
+# Boolean Cut 적용
+# ============================================================================
+
+def apply_step_cut(
+    shape: TopoDS_Shape,
+    zpos: float,
+    direction: str,
+    outer_radius: float,
+    inner_radius: float,
+    stock_height: float,
+    label_maker: Optional[LabelMaker] = None,
+) -> Optional[TopoDS_Shape]:
+    """Step Boolean Cut 적용. 성공 시 새 형상, 실패 시 None.
+
+    zpos를 경계로 direction 방향 끝(stock 상단 또는 하단)까지 깎아낸다.
+
+    Args:
+        zpos: Step 경계 z 위치
+        direction: 'top'(zpos~stock_height 제거) 또는 'bottom'(0~zpos 제거)
+        outer_radius: 깎아내기 전 반경 (부모 반경)
+        inner_radius: 깎아낸 후 반경 (새 반경)
+        stock_height: 현재 stock 전체 높이
+    """
+    cut_shape = create_step_cut(zpos, direction, outer_radius, inner_radius, stock_height)
+    if cut_shape is None or cut_shape.IsNull():
+        print("    [Warning] Step 도구 형상 생성 실패")
+        return None
+    return _apply_cut(shape, cut_shape, Labels.STEP, label_maker, expected_new_faces=2)
+
+
+def apply_groove_cut(
+    shape: TopoDS_Shape,
+    zpos: float,
+    width: float,
+    outer_radius: float,
+    inner_radius: float,
+    label_maker: Optional[LabelMaker] = None,
+) -> Optional[TopoDS_Shape]:
+    """Groove Boolean Cut 적용. 성공 시 새 형상, 실패 시 None.
+
+    Args:
+        zpos: groove 시작 z 위치 (z_min)
+        width: groove 폭 (z 방향 길이)
+        outer_radius: groove 바깥 반경 (부모 반경)
+        inner_radius: groove 안쪽 반경 (깎인 후 반경)
+    """
+    cut_shape = create_groove_cut(zpos, width, outer_radius, inner_radius)
+    if cut_shape is None or cut_shape.IsNull():
+        print("    [Warning] Groove 도구 형상 생성 실패")
+        return None
+    return _apply_cut(shape, cut_shape, Labels.GROOVE, label_maker, expected_new_faces=3)
+
+
+def _apply_cut(
+    shape: TopoDS_Shape,
+    cut_shape: TopoDS_Shape,
+    label: int,
+    label_maker: Optional[LabelMaker],
+    expected_new_faces: Optional[int] = None,
+) -> Optional[TopoDS_Shape]:
+    """Boolean Cut 공통 로직.
+
+    Args:
+        expected_new_faces: 정상 적용 시 생성되어야 할 새 face 수.
+            None이면 검증 생략. Step=2, Groove=3.
+    """
+    op = DesignOperation(shape)
+    result = op.cut(cut_shape)
+    if result is None:
+        return None
+
+    if expected_new_faces is not None:
+        actual = len(op.generated_faces)
+        if actual != expected_new_faces:
+            feature_name = {Labels.STEP: "Step", Labels.GROOVE: "Groove"}.get(label, "Feature")
+            print(
+                f"    [Warning] {feature_name} 생성 face 수 불일치: "
+                f"expected={expected_new_faces}, actual={actual}"
+            )
+            return None
+
+    if label_maker is not None:
+        label_maker.update_label(op, label)
+
+    return result
 
 
 # ============================================================================
@@ -211,55 +293,5 @@ def apply_edge_features(
             print(f"    총 {applied_count}개 엣지 피처 적용")
     except Exception as e:
         print(f"    엣지 피처 적용 중 오류: {e}")
-
-    return shape
-
-
-# ============================================================================
-# Request 적용 (상태 없는 함수)
-# ============================================================================
-
-def apply_turning_requests(
-    shape: TopoDS_Shape,
-    requests: List[TurningFeatureRequest],
-    label_maker: Optional[LabelMaker] = None,
-) -> TopoDS_Shape:
-    """TurningFeatureRequest 목록을 순서대로 Boolean Cut으로 적용.
-
-    Args:
-        shape: 원본 스톡 형상
-        requests: Planner가 생성한 feature request 목록
-        label_maker: Face 라벨 관리자 (None이면 라벨링 비활성)
-
-    Returns:
-        모든 요청이 적용된 TopoDS_Shape
-    """
-    for req in requests:
-        if req.feature_type == 'step':
-            cut_shape = create_step_cut(req.z_min, req.z_max, req.outer_radius, req.inner_radius)
-        elif req.feature_type == 'groove':
-            cut_shape = create_groove_cut(req.z_min, req.z_max, req.outer_radius, req.inner_radius)
-        else:
-            print(f"    [Warning] 알 수 없는 feature_type: {req.feature_type}, 스킵")
-            continue
-
-        if cut_shape is None or cut_shape.IsNull():
-            print(f"    [Warning] {req.feature_type} 도구 형상 생성 실패, 스킵")
-            continue
-
-        if label_maker is not None:
-            op = DesignOperation(shape)
-            result = op.cut(cut_shape)
-            if result is None:
-                print(f"    [Warning] {req.feature_type} Boolean Cut 실패, 스킵")
-                continue
-            shape = result
-            label_maker.update_label(op, req.label)
-        else:
-            result = BRepAlgoAPI_Cut(shape, cut_shape).Shape()
-            if result is None or result.IsNull():
-                print(f"    [Warning] {req.feature_type} Boolean Cut 실패, 스킵")
-                continue
-            shape = result
 
     return shape

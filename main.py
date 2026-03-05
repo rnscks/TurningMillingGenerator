@@ -1,15 +1,13 @@
-from core.turning.features import create_stock, StockInfo
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeCylinder
-from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Ax2
+from core.turning.features import create_stock, create_step_cut, create_groove_cut, apply_groove_cut
 
+from OCC.Display.SimpleGui import init_display
 
+stock = create_stock(height=10, radius=5)
 
-stock = create_stock(StockInfo(height=10, radius=5))
-
-from OCC.Display.SimpleGui import  init_display
-
+step_cut = apply_groove_cut(stock, 0, 5, 10, 4)
 
 a, b, c, d = init_display()
-a.DisplayShape(stock)
+a.DisplayShape(step_cut)
 a.FitAll()
+
 b()

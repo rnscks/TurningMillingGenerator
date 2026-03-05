@@ -18,9 +18,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.tree.generator import generate_trees
-from core.turning.features import TurningParams, create_stock, apply_turning_requests
-from core.tree.node import Region, RequiredSpace, TreeNode, load_tree
+from core.turning.features import create_stock, apply_turning_requests
+from core.tree.node import Region, TreeNode, load_tree
 from core.turning.planner import TurningPlanner
+from core.turning.params import TurningParams
 
 
 # ============================================================================
@@ -74,46 +75,6 @@ class TestRegion:
         region = Region(z_min=0.0, z_max=10.0, radius=5.0)
         assert region.direction is None
 
-
-# ============================================================================
-# RequiredSpace 테스트
-# ============================================================================
-
-class TestRequiredSpace:
-    def test_required_space_creation(self):
-        space = RequiredSpace(
-            height=10.0,
-            depth=2.0,
-            feature_height=3.0,
-            feature_depth=0.5
-        )
-        assert space.height == 10.0
-        assert space.depth == 2.0
-        assert space.feature_height == 3.0
-        assert space.feature_depth == 0.5
-        assert space.margin == 0.0
-
-    def test_required_space_with_margin(self):
-        space = RequiredSpace(
-            height=10.0, depth=2.0,
-            feature_height=3.0, feature_depth=0.5,
-            margin=0.45
-        )
-        assert space.margin == 0.45
-
-    def test_groove_margin_ratio_consistency(self):
-        ratio = 0.15
-        feature_height = 2.5
-        expected_margin = feature_height * ratio
-        space = RequiredSpace(
-            height=feature_height + 2 * expected_margin,
-            depth=0.6,
-            feature_height=feature_height,
-            feature_depth=0.6,
-            margin=expected_margin
-        )
-        assert abs(space.margin - feature_height * ratio) < 1e-9
-        assert abs(space.height - (feature_height + 2 * space.margin)) < 1e-9
 
 
 # ============================================================================

@@ -38,7 +38,7 @@ models: List[Dict] = []  # [{name, labeled_faces, stats}, ...]
 # 모델 생성
 # ============================================================================
 
-def build_params() -> TurningMillingParams:
+def build_params(enable_milling: bool = True) -> TurningMillingParams:
     return TurningMillingParams(
         turning=TurningParams(
             stock_height_margin=(3.0, 8.0),
@@ -63,7 +63,7 @@ def build_params() -> TurningMillingParams:
             rect_aspect_min=0.4,
             rect_aspect_max=2.5,
         ),
-        enable_milling=True,
+        enable_milling=enable_milling,
         target_face_types=["Cylinder", "Cone"],
         max_features=4,
         features_per_face=1,
@@ -95,9 +95,9 @@ def select_diverse_trees(trees: List[Dict], count: int = 5) -> List[Tuple[int, D
     return selected[:count]
 
 
-def generate_models(trees: List[Dict], selected: List[Tuple[int, Dict]]) -> List[Dict]:
+def generate_models(trees: List[Dict], selected: List[Tuple[int, Dict]], enable_milling: bool = True) -> List[Dict]:
     """선택된 트리들로 라벨링된 모델 생성."""
-    params = build_params()
+    params = build_params(enable_milling=enable_milling)
     result = []
     
     for idx, tree in selected:
@@ -198,7 +198,13 @@ def make_label_callback(model_idx: int, name: str):
 
 def main():
     global display, models
-    
+
+    # ── 모드 설정 ──────────────────────────────────────────────────────────
+    # True: 터닝 결과만 확인 (Step/Groove/Chamfer/Fillet 라벨)
+    # False: 터닝 + 밀링 전체 확인
+    TURNING_ONLY = True
+    # ───────────────────────────────────────────────────────────────────────
+
     # 1. 트리 로드
     trees_path = Path("trees_N6_H3.json")
     results_tree_path = Path("results/trees/trees_N6_H3.json")
@@ -218,8 +224,8 @@ def main():
     print(f"\n{'=' * 60}")
     print(f"모델 {len(selected)}개 생성 시작")
     print(f"{'=' * 60}")
-    
-    models = generate_models(trees, selected)
+
+    models = generate_models(trees, selected, enable_milling=not TURNING_ONLY)
     
     if not models:
         print("생성된 모델이 없습니다.")
