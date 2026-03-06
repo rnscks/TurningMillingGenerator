@@ -6,7 +6,7 @@ stock을 생성하고 BFS Top-Down으로 Step/Groove Boolean Cut을 적용.
 """
 
 from collections import deque
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from OCC.Core.TopoDS import TopoDS_Shape
 
@@ -33,7 +33,6 @@ class TurningShapeBuilder:
         self._stock_height = stock_height
         self._stock_radius = stock_radius
         self.params = params or TurningParams()
-        self._occupied_ranges: List[Tuple[float, float]] = []
 
     def build(
         self,
@@ -41,8 +40,6 @@ class TurningShapeBuilder:
         label_maker=None,
     ) -> TopoDS_Shape:
         """stock을 생성하고 트리에 따라 Step/Groove를 적용한 최종 형상을 반환."""
-        self._occupied_ranges = []
-
         shape = create_stock(self._stock_height, self._stock_radius)
 
         if label_maker is not None:
@@ -97,14 +94,12 @@ class TurningShapeBuilder:
                 result = self._apply_step(node, shape, label_maker)
                 if result is not None:
                     shape = result
-                    self._register_z_range(region.z_min, region.z_max)
                     applied = True
 
             elif node.label == 'g':
                 result = self._apply_groove(node, shape, label_maker)
                 if result is not None:
                     shape = result
-                    self._register_z_range(region.z_min, region.z_max)
                     applied = True
 
             for child in node.children:
@@ -118,21 +113,28 @@ class TurningShapeBuilder:
         shape: TopoDS_Shape,
         label_maker,
     ) -> Optional[TopoDS_Shape]:
-        """node.region을 기반으로 Step Boolean Cut 적용."""
+        """node.region(height, radius)과 node.direction으로 Step Boolean Cut 적용.
+
+        top:    stock 상단에서 height만큼 내려온 구간 [z_max - height, z_max]
+        bottom: stock 하단에서 height만큼 올라온 구간 [0, height]
+        """
         region = node.region
-        direction = region.direction or 'top'
-
-        if self._check_z_overlap(region.z_min, region.z_max):
-            print(f"    [Warning] Step z 범위 [{region.z_min:.2f}, {region.z_max:.2f}] 충돌, 스킵 (node_id={node.id})")
-            return None
-
-        # direction=top    → zpos = region.z_min (region=[zpos, stock_height])
-        # direction=bottom → zpos = region.z_max (region=[0, zpos])
-        zpos = region.z_min if direction == 'top' else region.z_max
         outer_r = self._get_parent_radius(node)
         inner_r = region.radius
 
-        result = apply_step_cut(shape, zpos, direction, outer_r, inner_r, self._stock_height, label_maker)
+        direction = node.direction or 'top'
+        if direction == 'top':
+            z_cut_max = self._stock_height
+            z_cut_min = z_cut_max - region.height
+        else:
+            z_cut_min = 0.0
+            z_cut_max = region.height
+
+        print(f"    [Step 적용] node_id={node.id}, dir={direction}, "
+              f"z=[{z_cut_min:.2f}, {z_cut_max:.2f}], "
+              f"outer_r={outer_r:.2f}, inner_r={inner_r:.2f}")
+
+        result = apply_step_cut(shape, z_cut_min, z_cut_max, outer_r, inner_r, label_maker)
         if result is None:
             print(f"    [Warning] Step Boolean Cut 실패 (node_id={node.id})")
         return result
@@ -143,18 +145,49 @@ class TurningShapeBuilder:
         shape: TopoDS_Shape,
         label_maker,
     ) -> Optional[TopoDS_Shape]:
-        """node.region을 기반으로 Groove Boolean Cut 적용."""
+        """node.region(height, radius)으로 Groove Boolean Cut 적용.
+
+        형제 groove 중 몇 번째인지(slot_index)와 총 개수(slot_total)로
+        부모 z 범위를 균등 분할하여 배치.
+        """
         region = node.region
-        z_min = region.z_min
-        z_max = region.z_max
-        width = z_max - z_min
-
-        if self._check_z_overlap(z_min, z_max):
-            print(f"    [Warning] Groove z 범위 [{z_min:.2f}, {z_max:.2f}] 충돌, 스킵 (node_id={node.id})")
-            return None
-
+        width = region.height
         outer_r = self._get_parent_radius(node)
         inner_r = region.radius
+
+        parent = node.parent_node
+        if parent is not None and parent.region is not None:
+            p_region = parent.region
+            p_direction = parent.direction or 'top'
+            if p_direction == 'top':
+                p_z_max = self._stock_height
+                p_z_min = p_z_max - p_region.height
+            else:
+                p_z_min = 0.0
+                p_z_max = p_region.height
+        else:
+            p_z_min = 0.0
+            p_z_max = self._stock_height
+
+        # 형제 groove 중 내 슬롯 index 계산
+        if parent is not None:
+            sibling_grooves = [c for c in parent.children if c.label == 'g']
+            slot_total = len(sibling_grooves)
+            slot_index = sibling_grooves.index(node) if node in sibling_grooves else 0
+        else:
+            slot_total = 1
+            slot_index = 0
+
+        p_span = p_z_max - p_z_min
+        slot_size = p_span / slot_total
+        slot_start = p_z_min + slot_index * slot_size
+        slot_center = slot_start + slot_size / 2.0
+        z_min = slot_center - width / 2.0
+        z_min = max(z_min, slot_start)
+
+        print(f"    [Groove 적용] node_id={node.id}, slot={slot_index+1}/{slot_total}, "
+              f"z=[{z_min:.2f}, {z_min + width:.2f}], "
+              f"width={width:.2f}, outer_r={outer_r:.2f}, inner_r={inner_r:.2f}")
 
         result = apply_groove_cut(shape, z_min, width, outer_r, inner_r, label_maker)
         if result is None:
@@ -166,14 +199,3 @@ class TurningShapeBuilder:
         if node.parent_node is not None and node.parent_node.region is not None:
             return node.parent_node.region.radius
         return self._stock_radius
-
-    def _check_z_overlap(self, z_min: float, z_max: float) -> bool:
-        """z 범위가 기존 점유 범위와 겹치는지 검사."""
-        for occ_min, occ_max in self._occupied_ranges:
-            if z_min < occ_max and z_max > occ_min:
-                return True
-        return False
-
-    def _register_z_range(self, z_min: float, z_max: float):
-        """점유 범위 등록."""
-        self._occupied_ranges.append((z_min, z_max))

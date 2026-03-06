@@ -37,30 +37,27 @@ def create_stock(height: float, radius: float) -> TopoDS_Shape:
 
 
 def create_step_cut(
-    zpos: float,
-    direction: str,
+    z_cut_min: float,
+    z_cut_max: float,
     outer_r: float,
     inner_r: float,
-    stock_height: float,
 ) -> TopoDS_Shape:
     """Step 가공용 annular ring 형상 생성 (Boolean Cut 도구).
 
-    Step은 zpos를 경계로 방향에 따라 stock 끝까지 깎아낸다.
+    지정된 z 범위 [z_cut_min, z_cut_max]에서 outer_r → inner_r 링으로 제거.
 
-    - direction='top'    : zpos ~ stock_height 구간을 outer_r → inner_r 링으로 제거
-    - direction='bottom' : 0 ~ zpos 구간을 outer_r → inner_r 링으로 제거
+    Args:
+        z_cut_min: 잘라낼 z 범위 시작
+        z_cut_max: 잘라낼 z 범위 끝
+        outer_r: 바깥 반경 (부모 반경)
+        inner_r: 안쪽 반경 (깎인 후 반경)
     """
-    if direction == 'top':
-        z_min, z_max = zpos, stock_height
-    elif direction == 'bottom':
-        z_min, z_max = 0.0, zpos
-    else:
-        raise ValueError(f"direction must be 'top' or 'bottom', got '{direction}'")
+    z_min, z_max = z_cut_min, z_cut_max
 
     height = z_max - z_min
     if height <= 0:
         raise ValueError(
-            f"Step 높이가 0 이하: direction='{direction}', zpos={zpos}, stock_height={stock_height}"
+            f"Step 높이가 0 이하: z=[{z_min:.2f}, {z_max:.2f}], height={height:.2f}"
         )
 
     axis = gp_Ax2(gp_Pnt(0, 0, z_min), gp_Dir(0, 0, 1))
@@ -101,25 +98,21 @@ def create_groove_cut(
 
 def apply_step_cut(
     shape: TopoDS_Shape,
-    zpos: float,
-    direction: str,
+    z_cut_min: float,
+    z_cut_max: float,
     outer_radius: float,
     inner_radius: float,
-    stock_height: float,
     label_maker: Optional[LabelMaker] = None,
 ) -> Optional[TopoDS_Shape]:
     """Step Boolean Cut 적용. 성공 시 새 형상, 실패 시 None.
 
-    zpos를 경계로 direction 방향 끝(stock 상단 또는 하단)까지 깎아낸다.
-
     Args:
-        zpos: Step 경계 z 위치
-        direction: 'top'(zpos~stock_height 제거) 또는 'bottom'(0~zpos 제거)
+        z_cut_min: 잘라낼 z 범위 시작
+        z_cut_max: 잘라낼 z 범위 끝
         outer_radius: 깎아내기 전 반경 (부모 반경)
         inner_radius: 깎아낸 후 반경 (새 반경)
-        stock_height: 현재 stock 전체 높이
     """
-    cut_shape = create_step_cut(zpos, direction, outer_radius, inner_radius, stock_height)
+    cut_shape = create_step_cut(z_cut_min, z_cut_max, outer_radius, inner_radius)
     if cut_shape is None or cut_shape.IsNull():
         print("    [Warning] Step 도구 형상 생성 실패")
         return None

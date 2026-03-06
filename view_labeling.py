@@ -40,19 +40,7 @@ models: List[Dict] = []  # [{name, labeled_faces, stats}, ...]
 
 def build_params(enable_milling: bool = True) -> TurningMillingParams:
     return TurningMillingParams(
-        turning=TurningParams(
-            stock_height_margin=(3.0, 8.0),
-            stock_radius_margin=(2.0, 5.0),
-            step_depth_range=(0.8, 1.5),
-            step_height_range=(2.0, 4.0),
-            step_margin=0.5,
-            groove_depth_range=(0.4, 0.8),
-            groove_width_range=(1.5, 3.0),
-            groove_margin=0.5,
-            chamfer_range=(0.3, 0.8),
-            fillet_range=(0.3, 0.8),
-            edge_feature_prob=0.3,
-        ),
+        turning=TurningParams(),
         milling=MillingParams(
             diameter_min=1.0,
             diameter_max_ratio=0.85,
@@ -125,7 +113,9 @@ def generate_models(trees: List[Dict], selected: List[Tuple[int, Dict]], enable_
             else:
                 print(f"  라벨링 실패, 스킵")
         except Exception as e:
+            import traceback
             print(f"  오류: {e}")
+            traceback.print_exc()
     
     return result
 
@@ -228,7 +218,12 @@ def main():
     models = generate_models(trees, selected, enable_milling=not TURNING_ONLY)
     
     if not models:
-        print("생성된 모델이 없습니다.")
+        print("생성된 모델이 없습니다. 트리 선택 범위를 늘려 재시도합니다.")
+        selected = list(enumerate(trees[:10]))
+        models = generate_models(trees, selected, enable_milling=not TURNING_ONLY)
+
+    if not models:
+        print("모델 생성에 전부 실패했습니다. 종료합니다.")
         return
     
     # 3. 라벨 STEP 저장

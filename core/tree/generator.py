@@ -261,23 +261,50 @@ class TreeGenerator:
         nodes = []
         node_id_counter = [0]
 
-        def add_node(subtree: Dict, parent_id: Optional[int], depth: int) -> int:
+        def add_node(subtree: Dict, parent_id: Optional[int], depth: int,
+                     parent_label: str = 'b', parent_direction: Optional[str] = None,
+                     step_sibling_index: int = 0) -> int:
             current_id = node_id_counter[0]
             node_id_counter[0] += 1
 
+            current_label = subtree["label"]
+
+            # step 노드의 direction 결정
+            direction = None
+            if current_label == 's':
+                if parent_label in ('b',):
+                    # base의 자식: 짝수 인덱스 → top, 홀수 → bottom
+                    direction = 'top' if step_sibling_index % 2 == 0 else 'bottom'
+                elif parent_label == 's':
+                    # step의 자식: 부모 direction 계승
+                    direction = parent_direction
+
+            # 자식 처리 (step 자식에게 sibling index 부여)
             children_ids = []
+            step_idx = 0
             for child_st in subtree.get("children", []):
-                child_id = add_node(child_st, current_id, depth + 1)
+                si = step_idx if child_st["label"] == 's' else 0
+                child_id = add_node(
+                    child_st, current_id, depth + 1,
+                    parent_label=current_label,
+                    parent_direction=direction,
+                    step_sibling_index=si,
+                )
+                if child_st["label"] == 's':
+                    step_idx += 1
                 children_ids.append(child_id)
 
-            nodes.append({
+            node_dict: Dict = {
                 "id": current_id,
-                "label": subtree["label"],
+                "label": current_label,
                 "parent": parent_id,
                 "children": children_ids,
-                "depth": depth
-            })
+                "depth": depth,
+            }
+            if direction is not None:
+                node_dict["direction"] = direction
 
+            nodes.append(node_dict)
             return current_id
 
         root_subtree = {
@@ -285,7 +312,7 @@ class TreeGenerator:
             "children": sorted_subtrees,
             "canonical": canonical
         }
-        add_node(root_subtree, None, 0)
+        add_node(root_subtree, None, 0, parent_label='b')
 
         nodes.sort(key=lambda x: x["id"])
 

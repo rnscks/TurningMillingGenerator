@@ -55,13 +55,11 @@ def count_faces(shape):
 class TestTurningParams:
     def test_default_params(self):
         p = TurningParams()
-        assert p.stock_height_margin == (3.0, 8.0)
-        assert p.stock_radius_margin == (2.0, 5.0)
+        assert p.stock_height_range == (10.0, 15.0)
+        assert p.stock_radius_range == (6.0, 12.0)
         assert p.step_depth_range == (0.8, 1.5)
-        assert p.step_height_range == (2.0, 4.0)
         assert p.step_margin == 0.5
-        assert p.groove_depth_range == (0.4, 0.8)
-        assert p.groove_width_range == (1.5, 3.0)
+        assert p.groove_depth_range == (0.6, 1.2)
         assert p.groove_margin == 0.5
         assert p.min_remaining_radius == 2.0
         assert p.chamfer_range == (0.3, 0.8)
@@ -144,29 +142,32 @@ class TestCreateGrooveCut:
 class TestApplyStepCut:
     def test_top_adds_faces(self):
         stock = make_cylinder(10.0, 20.0)
-        result = apply_step_cut(stock, zpos=10.0, direction='top', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
+        # direction=top, zpos=10, stock_height=20 → z=[10, 20]
+        result = apply_step_cut(stock, z_cut_min=10.0, z_cut_max=20.0, outer_radius=10.0, inner_radius=7.0)
         assert result is not None
         assert not result.IsNull()
         assert count_faces(result) > count_faces(stock)
 
     def test_bottom_adds_faces(self):
         stock = make_cylinder(10.0, 20.0)
-        result = apply_step_cut(stock, zpos=10.0, direction='bottom', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
+        # direction=bottom, zpos=10 → z=[0, 10]
+        result = apply_step_cut(stock, z_cut_min=0.0, z_cut_max=10.0, outer_radius=10.0, inner_radius=7.0)
         assert result is not None
         assert not result.IsNull()
         assert count_faces(result) > count_faces(stock)
 
-    def test_zpos_at_boundary_raises(self):
+    def test_zero_height_raises(self):
         stock = make_cylinder(10.0, 20.0)
         with pytest.raises(ValueError):
-            apply_step_cut(stock, zpos=20.0, direction='top', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
+            # z_cut_min == z_cut_max → height=0
+            apply_step_cut(stock, z_cut_min=20.0, z_cut_max=20.0, outer_radius=10.0, inner_radius=7.0)
 
     def test_generates_exactly_2_new_faces(self):
         """Step Boolean Cut은 정상 시 inner 원통면 + 링 평면 = 2개의 새 face를 생성해야 함."""
         from core.design_operation import DesignOperation
         from core.turning.features import create_step_cut
         stock = make_cylinder(10.0, 20.0)
-        cut = create_step_cut(zpos=10.0, direction='top', outer_r=10.0, inner_r=7.0, stock_height=20.0)
+        cut = create_step_cut(z_cut_min=10.0, z_cut_max=20.0, outer_r=10.0, inner_r=7.0)
         op = DesignOperation(stock)
         op.cut(cut)
         assert len(op.generated_faces) == 2, f"Step generated_faces={len(op.generated_faces)}, expected=2"
@@ -208,7 +209,7 @@ class TestCollectCircularEdges:
 
     def test_after_step_cut(self):
         stock = make_cylinder(10.0, 20.0)
-        shape = apply_step_cut(stock, zpos=10.0, direction='top', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
+        shape = apply_step_cut(stock, z_cut_min=10.0, z_cut_max=20.0, outer_radius=10.0, inner_radius=7.0)
         edges = collect_circular_edges(shape)
         assert len(edges) > 0
 
@@ -220,7 +221,7 @@ class TestCollectCircularEdges:
 class TestApplyEdgeFeatures:
     def test_returns_valid_shape(self):
         stock = make_cylinder(10.0, 20.0)
-        shape = apply_step_cut(stock, zpos=10.0, direction='top', outer_radius=10.0, inner_radius=7.0, stock_height=20.0)
+        shape = apply_step_cut(stock, z_cut_min=10.0, z_cut_max=20.0, outer_radius=10.0, inner_radius=7.0)
 
         result = apply_edge_features(shape, edge_feature_prob=1.0,
                                      chamfer_range=(0.3, 0.8), fillet_range=(0.3, 0.8))

@@ -11,21 +11,12 @@ from typing import List, Optional
 
 @dataclass
 class Region:
-    """가공 가능 영역 - z 범위와 반경"""
-    z_min: float
-    z_max: float
+    """가공 가능 영역 - 높이와 반경"""
+    height: float
     radius: float
-    direction: Optional[str] = None  # 'top' or 'bottom' for step
-
-    @property
-    def height(self) -> float:
-        return self.z_max - self.z_min
 
     def __repr__(self):
-        return (
-            f"Region(z=[{self.z_min:.2f}, {self.z_max:.2f}], "
-            f"r={self.radius:.2f}, dir={self.direction})"
-        )
+        return f"Region(height={self.height:.2f}, r={self.radius:.2f})"
 
 
 class TreeNode:
@@ -36,12 +27,17 @@ class TreeNode:
         self.label = label
         self.parent_id = parent_id
         self.depth = depth
+        self.direction: Optional[str] = None  # step 노드: 'top' or 'bottom', 그 외: None
         self.children: List['TreeNode'] = []
         self.region: Optional[Region] = None
         self.parent_node: Optional['TreeNode'] = None
 
+    def children_by(self, label: str) -> List['TreeNode']:
+        """특정 label의 자식 노드 목록 반환."""
+        return [c for c in self.children if c.label == label]
+
     def __repr__(self):
-        return f"TreeNode(id={self.id}, label='{self.label}', depth={self.depth})"
+        return f"TreeNode(id={self.id}, label='{self.label}', depth={self.depth}, dir={self.direction})"
 
 
 def load_tree(tree_data: dict) -> TreeNode:
@@ -66,5 +62,10 @@ def load_tree(tree_data: dict) -> TreeNode:
             node.parent_node = parent
         else:
             root = node
+
+    # direction 필드 로드 (step 노드)
+    for nd in nodes_data:
+        if 'direction' in nd:
+            nodes[nd['id']].direction = nd['direction']
 
     return root

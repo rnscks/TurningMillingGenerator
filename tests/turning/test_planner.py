@@ -198,51 +198,6 @@ class TestComplexTrees:
 # z 범위 충돌 검사 검증
 # ============================================================================
 
-class TestZOverlapCheck:
-    def test_no_overlap_initially(self):
-        builder = TurningShapeBuilder(10.0, 5.0)
-        assert not builder._check_z_overlap(0.0, 5.0)
-
-    def test_overlap_detected(self):
-        builder = TurningShapeBuilder(10.0, 5.0)
-        builder._register_z_range(5.0, 15.0)
-        assert builder._check_z_overlap(10.0, 20.0)
-        assert builder._check_z_overlap(5.0, 15.0)
-        assert builder._check_z_overlap(7.0, 12.0)
-
-    def test_adjacent_no_overlap(self):
-        builder = TurningShapeBuilder(10.0, 5.0)
-        builder._register_z_range(5.0, 10.0)
-        assert not builder._check_z_overlap(10.0, 15.0)
-        assert not builder._check_z_overlap(0.0, 5.0)
-
-    def test_step_groove_no_overlap_after_plan(self):
-        """Step과 Groove가 겹치지 않아야 함."""
-        planner = TurningPlanner()
-        root = load_tree(TREE_STEP_AND_GROOVE)
-        planner.plan_and_apply(root)
-
-        ranges = planner._occupied_ranges
-        for i in range(len(ranges)):
-            for j in range(i + 1, len(ranges)):
-                a_min, a_max = ranges[i]
-                b_min, b_max = ranges[j]
-                assert not (a_min < b_max and a_max > b_min), \
-                    f"z 범위 겹침 발견: [{a_min:.2f},{a_max:.2f}] vs [{b_min:.2f},{b_max:.2f}]"
-
-    def test_sibling_grooves_no_overlap(self):
-        """형제 Groove들이 겹치지 않아야 함."""
-        planner = TurningPlanner()
-        root = load_tree(TREE_SIBLING_GROOVES)
-        planner.plan_and_apply(root)
-
-        ranges = planner._occupied_ranges
-        for i in range(len(ranges)):
-            for j in range(i + 1, len(ranges)):
-                a_min, a_max = ranges[i]
-                b_min, b_max = ranges[j]
-                assert not (a_min < b_max and a_max > b_min), \
-                    f"z 범위 겹침 발견: [{a_min:.2f},{a_max:.2f}] vs [{b_min:.2f},{b_max:.2f}]"
 
 
 # ============================================================================
@@ -380,7 +335,3 @@ class TestTurningShapeBuilder:
         shape = builder.build(root)
         assert count_faces(shape) > 3
 
-    def test_builder_occupied_ranges_registered(self):
-        builder, root = self._prepare_builder(TREE_STEP_AND_GROOVE)
-        builder.build(root)
-        assert len(builder._occupied_ranges) >= 1
